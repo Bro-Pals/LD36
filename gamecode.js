@@ -56,6 +56,9 @@ var checkWinVals = {
 	delay : 20
 }
 
+/* Meteor explosion values */
+var meteorExplosionRadius = 100;
+
 /* Texture coordinate raw data */
 var objectTexCoordData = {
 	texture_coords : [
@@ -796,6 +799,7 @@ function drawHoverBrick() {
 
 
 function updateBrick(_brick, _diff) {
+	_brick.vel[1] = GRAVITY_VELOCITY;
 	_brick.pos[0] += _brick.vel[0];
 	_brick.pos[1] += _brick.vel[1];
 	//Check to see if it will collide with something, and if
@@ -816,8 +820,24 @@ function updateMeteor(_meteor, _diff) {
 		if (gameObjects[i].type == TYPE_BRICK) {
 			if (objectsAreColliding(_meteor, gameObjects[i])) {
 				// explode it!
+				
+				
+				for (var i = 0; i < gameObjects.length; i++) {
+					if (gameObjects[i].type == TYPE_BRICK) {
+						var otherCentX = gameObjects[i].pos[0] + (gameObjects[i].size[0] / 2);
+						var otherCentY = gameObjects[i].pos[1] + (gameObjects[i].size[1] / 2);
+						var diffX = _meteor.pos[0] + (_meteor.size[0]/2) - otherCentX;
+						var diffY = _meteor.pos[1] + (_meteor.size[1]/2) - otherCentY;
+						var magn = Math.sqrt((diffX * diffX) + (diffY * diffY));
+						if (magn < meteorExplosionRadius) {
+							removeObject(gameObjects[i]);
+						}
+					}
+				}
+				
+				
 				removeObject(_meteor);
-				removeObject(gameObjects[i]);
+				//removeObject(gameObjects[i]);
 				break;
 			}
 		}
@@ -1034,7 +1054,7 @@ function updatePlayGame(_diff) {
 		// modify the complete percentage
 		completePercent = completePercent / 0.9;
 		console.log("COMPLETE PERCENTAGE: " + completePercent + "");
-		if (completePercent > 0.7) {
+		if (completePercent > 0.8) {
 			advanceStory();
 		}
 	}
