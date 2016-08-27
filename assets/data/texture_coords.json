@@ -83,6 +83,13 @@
 			y : 842,
 			width: 800,
 			height: 600
+		},
+		{ 
+			name : "resumeButton",
+			x : 1128,
+			y : 592,
+			width: 128,
+			height: 128
 		}
 	]
 }
