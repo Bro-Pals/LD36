@@ -804,7 +804,7 @@ function doCollisionChecking(_obj) {
 
 //Thanks Stack Overflow!
 //http://stackoverflow.com/questions/2752349/fast-rectangle-to-rectangle-intersection
-function objectsAreColliding(_obj1, _obj2) [
+function objectsAreColliding(_obj1, _obj2) {
 	return !(_obj1.pos[0] > _obj2.pos[0]+_obj2.size[0] || 
            _obj1.pos[0]+_obj1.size[0] < _obj2.pos[0] || 
            _obj1.pos[1] > _obj2.pos[1]+_obj2.size[1] ||
