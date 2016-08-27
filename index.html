@@ -11,6 +11,7 @@
 		uniform vec2 worldPosition; //Position of object in game world (World coordinates) 
 		uniform vec2 worldSize; //(width, height) of object in game world (World coordinates)
 		uniform vec2 screenSize; //(width, height) of the game screen in screen coordinates 
+		uniform float depthValue;
 		//*The size of the view for world coordinates is the same scale as screen coordinates*
 		
 		void main() {
@@ -20,7 +21,8 @@
 				//to world coordinates (worldPosition and worldSize) and then to NDC
 				((2.0*worldSize.x*vertexPos.x)+(2.0*worldPosition.x)+(worldSize.x))/screenSize.x - 1.0,
 				((2.0*worldSize.y*vertexPos.y)+(2.0*worldPosition.y)+(worldSize.y))/screenSize.y - 1.0,
-				0.0, 1.0
+				depthValue,
+				1.0
 			);
 		}
 		
@@ -39,7 +41,11 @@
 </head>
 <body onload="startGame()">
 	<!--Our game canvas!-->
-	<canvas width="800" height="500" id="gamecanvas"></script>
+	<canvas width="800" height="600" id="gamecanvas" style="
+		margin-left:auto;
+		margin-right:auto;
+		display:block;
+	"></canvas>
 	<script>
 		function startGame() {
 			GameManager.createState(
@@ -48,9 +54,9 @@
 				updateMainMenu,
 				renderMainMenu,
 					{
-					key : keyMainMenu,
+					key : null,
 					mouse : mouseMainMenu,
-					mouseMove : mouseMoveMainMenu
+					mouseMove : null
 					}
 				);
 			GameManager.createState(
@@ -59,9 +65,9 @@
 				updateStoryBoard,
 				renderStoryBoard,
 					{
-					key : keyStoryBoard,
+					key : null,
 					mouse : mouseStoryBoard,
-					mouseMove : mouseMoveStoryBoard
+					mouseMove : null
 					}
 				);
 			GameManager.createState(
@@ -70,16 +76,21 @@
 				updatePlayGame,
 				renderPlayGame,
 					{
-					key : keyPlayGame,
+					key : null,
 					mouse : mousePlayGame,
 					mouseMove : mouseMovePlayGame
 					}
 				);
 			GameManager.setCanvas("gamecanvas", "webgl");
+			initObjectDatas();
 			initWebGLParts();
 			GameManager.setState("mainMenu");
 			GameManager.loop();
 		}
 	</script>
+	<!--Texture images-->
+	<img src="assets/img/textures.png" style="display:none;" id="texturesImage"></img>
+	<img src="assets/img/slides.png" style="display:none;" id="slidesImage"></img>
+	<!--Audio-->
 </body>
 </html>
