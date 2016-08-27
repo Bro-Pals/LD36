@@ -90,6 +90,34 @@
 			y : 592,
 			width: 128,
 			height: 128
+		},
+		{
+			name : "overlay1",
+			x : 1605,
+			y : 842,
+			width : 181,
+			height : 129
+		},
+		{
+			name : "overlay2",
+			x : 1605,
+			y : 975,
+			width : 280,
+			height : 144
+		},
+		{
+			name : "overlay3",
+			x : 1888,
+			y : 844,
+			width : 76,
+			height : 275
+		},
+		{
+			name : "overlay3",
+			x : 1605,
+			y : 1122,
+			width : 336,
+			height : 250
 		}
 	]
 }
