@@ -991,12 +991,9 @@ function initPlayGame() {
 	clearObjectArrays();
 	curSampler = SAMPLER_TEXTURES;
 	addObject(createBackground(0, 0, 800, 600, "background"));
-<<<<<<< HEAD
 	meteorSpawnVals.currTime = 3.0 * meteorSpawnVals.baseTime / 4;
-=======
 	pauseButton = createDecor(790-64, 10, 64, 64, "pauseButton");
 	paused = false;
->>>>>>> 5ecd44bd7fa2ee6620daa09333a154ba7d964d28
 }
 
 function updatePlayGame(_diff) {
