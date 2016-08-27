@@ -5,22 +5,26 @@
 	<script src="lib/gamethings.js"></script>
 	<script src="gamecode.js"></script>
 	<script type="x-shader/x-vertex" id="vshader">
-		attribute vec2 vertexPos; //Raw vertex data
+		attribute vec2 vertexPos; //Vertex data
 		attribute vec2 texCoord; //Raw texture coordinate data 
 		varying mediump vec2 varyingTexCoord; 
 		uniform vec2 worldPosition; //Position of object in game world (World coordinates) 
-		uniform vec2 worldSize; //(width, height) of object in game world (World coordinates)
+		uniform vec2 worldSize;
 		uniform vec2 screenSize; //(width, height) of the game screen in screen coordinates 
 		uniform float depthValue;
 		//*The size of the view for world coordinates is the same scale as screen coordinates*
 		
 		void main() {
 			varyingTexCoord = texCoord; //Pass it on to the fragment shader 
+			float halfScreenWidth = screenSize.x/2.0;
+			float halfScreenHeight = screenSize.y/2.0;
+			float halfWidth = worldSize.x/2.0;
+			float halfHeight = worldSize.y/2.0;
 			gl_Position = vec4(
-				//Formula transforms the raw coordinate (vertexPos)
-				//to world coordinates (worldPosition and worldSize) and then to NDC
-				((2.0*worldSize.x*vertexPos.x)+(2.0*worldPosition.x)+(worldSize.x))/screenSize.x - 1.0,
-				((2.0*worldSize.y*vertexPos.y)+(2.0*worldPosition.y)+(worldSize.y))/screenSize.y - 1.0,
+				//Transform so that the object's top left is their 0,0 and to
+				//account for a different sized canvas
+				(vertexPos.x-worldPosition.x+halfWidth-400.0)/halfScreenWidth*(halfScreenWidth/400.0),
+				-(vertexPos.y-worldPosition.y+halfHeight-300.0)/halfScreenHeight*(halfScreenHeight/300.0),
 				depthValue,
 				1.0
 			);

@@ -141,11 +141,13 @@ var levelParams = [ ];
 var objectData = { 
 	namesArray : [ ], //List of names 
 	indexBufferOffsetMap : [ ], //names mapped to offsets
+	sizesMap : [ ], //names mapped to sizes
 	textureCoordsMap : [ ], //names mapped to texture coordinates
 };
 var slidesData = { 
 	namesArray : [ ], //List of names 
 	indexBufferOffsetMap : [ ], //names mapped to offsets
+	sizesMap : [ ], //names mapped to sizes
 	textureCoordsMap : [ ], //names mapped to texture coordinates
 };
 
@@ -195,6 +197,7 @@ function initWebGLParts() {
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
 	/* Load programs and get shader attribute and uniform locations */
 	objectProgram = makeProgramWithShaderIds("vshader", "fshader");
+	gl.useProgram(objectProgram);
 	objectProgramLocs.vertexPos = gl.getAttribLocation(objectProgram, "vertexPos");
 	objectProgramLocs.texCoord = gl.getAttribLocation(objectProgram, "texCoord");
 	objectProgramLocs.worldPosition = gl.getUniformLocation(objectProgram, "worldPosition");
@@ -209,24 +212,27 @@ function initWebGLParts() {
 	//Fill the arrays with object data
 	for (var i=0; i < objectData.namesArray.length; i++) {
 		var onName = objectData.namesArray[i];
+		var halfWidth = objectData.sizesMap[onName][0]/2;
+		var halfHeight = objectData.sizesMap[onName][1]/2
+		
 		//Array buffer setting
-		arrayArray[(i*16)+0] = -0.5;
-		arrayArray[(i*16)+1] = -0.5;
+		arrayArray[(i*16)+0] = -halfWidth;
+		arrayArray[(i*16)+1] = -halfHeight;
 		arrayArray[(i*16)+2] = objectData.textureCoordsMap[onName][0];
 		arrayArray[(i*16)+3] = objectData.textureCoordsMap[onName][1];
 	
-		arrayArray[(i*16)+4] = -0.5;
-		arrayArray[(i*16)+5] = 0.5;
+		arrayArray[(i*16)+4] = -halfWidth;
+		arrayArray[(i*16)+5] = halfHeight;
 		arrayArray[(i*16)+6] = objectData.textureCoordsMap[onName][2];
 		arrayArray[(i*16)+7] = objectData.textureCoordsMap[onName][3];
 		
-		arrayArray[(i*16)+8] = 0.5;
-		arrayArray[(i*16)+9] = 0.5;
+		arrayArray[(i*16)+8] = halfWidth;
+		arrayArray[(i*16)+9] = halfHeight;
 		arrayArray[(i*16)+10] = objectData.textureCoordsMap[onName][4];
 		arrayArray[(i*16)+11] = objectData.textureCoordsMap[onName][5];
 		
-		arrayArray[(i*16)+12] = 0.5;
-		arrayArray[(i*16)+13] = -0.5;
+		arrayArray[(i*16)+12] = halfWidth;
+		arrayArray[(i*16)+13] = -halfHeight;
 		arrayArray[(i*16)+14] = objectData.textureCoordsMap[onName][6];
 		arrayArray[(i*16)+15] = objectData.textureCoordsMap[onName][7];
 	
@@ -245,24 +251,27 @@ function initWebGLParts() {
 	//Fill the arrays with slides data 
 	for (var i=0; i < slidesData.namesArray.length; i++) {
 		var onName = slidesData.namesArray[i];
+		var halfWidth = slidesData.sizesMap[onName][0]/2;
+		var halfHeight = slidesData.sizesMap[onName][1]/2
+		
 		//Array buffer setting
-		arrayArray[slidesArrayStart+(i*16)+0] = -0.5;
-		arrayArray[slidesArrayStart+(i*16)+1] = -0.5;
+		arrayArray[slidesArrayStart+(i*16)+0] = -halfWidth;
+		arrayArray[slidesArrayStart+(i*16)+1] = -halfHeight;
 		arrayArray[slidesArrayStart+(i*16)+2] = slidesData.textureCoordsMap[onName][0];
 		arrayArray[slidesArrayStart+(i*16)+3] = slidesData.textureCoordsMap[onName][1];
 	
-		arrayArray[slidesArrayStart+(i*16)+4] = -0.5;
-		arrayArray[slidesArrayStart+(i*16)+5] = 0.5;
+		arrayArray[slidesArrayStart+(i*16)+4] = -halfWidth;
+		arrayArray[slidesArrayStart+(i*16)+5] = halfHeight;
 		arrayArray[slidesArrayStart+(i*16)+6] = slidesData.textureCoordsMap[onName][2];
 		arrayArray[slidesArrayStart+(i*16)+7] = slidesData.textureCoordsMap[onName][3];
 		
-		arrayArray[slidesArrayStart+(i*16)+8] = 0.5;
-		arrayArray[slidesArrayStart+(i*16)+9] = 0.5;
+		arrayArray[slidesArrayStart+(i*16)+8] = halfWidth;
+		arrayArray[slidesArrayStart+(i*16)+9] = halfHeight;
 		arrayArray[slidesArrayStart+(i*16)+10] = slidesData.textureCoordsMap[onName][4];
 		arrayArray[slidesArrayStart+(i*16)+11] = slidesData.textureCoordsMap[onName][5];
 		
-		arrayArray[slidesArrayStart+(i*16)+12] = 0.5;
-		arrayArray[slidesArrayStart+(i*16)+13] = -0.5;
+		arrayArray[slidesArrayStart+(i*16)+12] = halfWidth;
+		arrayArray[slidesArrayStart+(i*16)+13] = -halfHeight;
 		arrayArray[slidesArrayStart+(i*16)+14] = slidesData.textureCoordsMap[onName][6];
 		arrayArray[slidesArrayStart+(i*16)+15] = slidesData.textureCoordsMap[onName][7];
 	
@@ -306,15 +315,14 @@ function initWebGLParts() {
 	gl.bindTexture(gl.TEXTURE_2D, slidesTex);
 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, 
 		slidesImage);
+	/*
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-	/* 
-	If gl.NEAREST looks bad then use gl.LINEAR
 	*/
-	/*
+	
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	*/
+	
 }
 
 /*
@@ -368,16 +376,21 @@ function initObjectData(_dataObject, _rawObject) {
 			(theX+theWidth)/_rawObject.imageWidth, (theY+theHeight)/_rawObject.imageHeight,
 			(theX+theWidth)/_rawObject.imageWidth, theY/_rawObject.imageHeight,
 		];
+		//Set the data for the sizes array
+		_dataObject.sizesMap[theName] = [ theWidth, theHeight ];
 		//Calculate the byte offset to get to the first index in
 		//the (not yet created) index array.
 		//6 indicies per 4 texture coordinates (4 verticies per shape).
-		//Using a Uint8Array to store indicies (gl.UNSIGNED_INT)
+		//Using a Uint16Array to store indicies (gl.UNSIGNED_INT)
 		_dataObject.indexBufferOffsetMap[theName] = 6 * i * Uint16Array.BYTES_PER_ELEMENT;
+	
+		console.log("Initialized data for " + theName + "; block offset is " + _dataObject.indexBufferOffsetMap[theName] );
 	}
 	
 	/*
 	Print texture coordinates 
-	
+	*/
+	/*
 	for (i=0; i < _dataObject.namesArray.length; i++) {
 		theName = _dataObject.namesArray[i];
 		console.log("Texture coordinates for " +  theName);
@@ -499,7 +512,7 @@ function removeObject(_obj) {
 }
 
 function drawObject(_obj) {
-	console.log("Drawing:\nx " + _obj.pos[0] + "\ny " + _obj.pos[1] + "\nwidth " + _obj.size[0] + "\nheight " + _obj.size[1] + "\noffset " + _obj.bufferOffst);
+	//console.log("Drawing:\nx " + _obj.pos[0] + "\ny " + _obj.pos[1] + "\nwidth " + _obj.size[0] + "\nheight " + _obj.size[1] + "\noffset " + _obj.bufferOffset);
 	gl.uniform2f(objectProgramLocs.worldPosition, _obj.pos[0], _obj.pos[1]);
 	gl.uniform2f(objectProgramLocs.worldSize, _obj.size[0], _obj.size[1]);
 	gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, _obj.bufferOffset);
@@ -509,8 +522,28 @@ function drawObject(_obj) {
 function drawObjectArrays() {
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	gl.useProgram(objectProgram);
+	//Set texture sampler and screen size uniforms 
 	gl.uniform1i(objectProgramLocs.tex, curSampler);
 	gl.uniform2f(objectProgramLocs.screenSize, GameManager.getCanvasWidth(), GameManager.getCanvasHeight());
+	//Vertex attrib pointer for vertex position and texture coordnates
+	gl.vertexAttribPointer(
+		objectProgramLocs.vertexPos,
+		2,
+		gl.FLOAT,
+		gl.FALSE,
+		Float32Array.BYTES_PER_ELEMENT * 4,
+		0
+	);
+	gl.vertexAttribPointer(
+		objectProgramLocs.texCoord,
+		2,
+		gl.FLOAT,
+		gl.FALSE,
+		Float32Array.BYTES_PER_ELEMENT * 4,
+		Float32Array.BYTES_PER_ELEMENT * 2
+	);
+	gl.enableVertexAttribArray(objectProgramLocs.vertexPos);
+	gl.enableVertexAttribArray(objectProgramLocs.texCoord);
 	var i; //iterator
 	if (gameObjects.length != 0) {
 		//Regular objects are out in the foreground
