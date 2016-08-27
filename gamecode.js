@@ -17,6 +17,108 @@ var onStory = 0;
 var onLevel = 0;
 var progressionPointer = 0;
 
+/* Texture coordinate raw data */
+var objectTexCoordData = {
+	texture_coords : [
+		{ 
+			name : "background",
+			x : 800,
+			y : 842,
+			width: 800,
+			height: 600
+		},
+		{ 
+			name : "block",
+			x : 0,
+			y : 252,
+			width: 128,
+			height: 128
+		},
+		{ 
+			name : "continueButton",
+			x : 0,
+			y : 592,
+			width: 256,
+			height: 256
+		},
+		{ 
+			name : "end",
+			x : 0,
+			y : 1442,
+			width: 800,
+			height: 600
+		},
+		{ 
+			name : "gameover",
+			x : 800,
+			y : 1442,
+			width: 800,
+			height: 600
+		},
+		{ 
+			name : "godeye",
+			x : 170,
+			y : 242,
+			width: 256,
+			height: 256
+		},
+		{ 
+			name : "menuButton",
+			x : 270,
+			y : 592,
+			width: 256,
+			height: 128
+		},
+		{ 
+			name : "meteor",
+			x : 500,
+			y : 252,
+			width: 256,
+			height: 256
+		},
+		{ 
+			name : "pauseButton",
+			x : 1000,
+			y : 592,
+			width: 128,
+			height: 128
+		},
+		{ 
+			name : "playButton",
+			x : 550,
+			y : 592,
+			width: 256,
+			height: 128
+		},
+		{ 
+			name : "strongman",
+			x : 1300,
+			y : 252,
+			width: 64,
+			height: 128
+		},
+		{ 
+			name : "title",
+			x : 0,
+			y : 842,
+			width: 800,
+			height: 600
+		}
+	]
+};
+
+var slideTexCoordData = {
+	slide_coords : [
+		{ 
+			name : "slide1",
+			x : 0,
+			y : 0,
+			width: 800,
+			height: 600
+		}
+	]
+};
+
 /* Container objects */
 var storyBoardPictures =  [ ];
 var levelParams = [ ];
@@ -40,7 +142,7 @@ function toLevel(_level) {
 
 progression = { 
 	function() {
-		
+		toStoryPicture(0);
 	}
 };
 
@@ -143,11 +245,11 @@ function removeFromArray(_obj, arr) {
 
 function addObject(_obj) {
 	if (_obj.type == TYPE_DECOR) {
-		
+		decorObjects.push(_obj);
 	} else if (_obj.type == TYPE_PRYAMID_SHAPE) {
-		
+		pyramidShapeObjects.push(_obj);
 	} else {
-		
+		gameObjects.push(_obj);
 	}
 }
 
@@ -273,5 +375,11 @@ function mousePlayGame(_pressed, _x, _y) {
 }
 
 function mouseMovePlayGame(_x, _y) {
+	
+}
+
+/* GRAPHIC EFFECT FUNCTIONS */
+
+function shakeScreen() {
 	
 }
