@@ -1,0 +1,64 @@
+{
+	level_goal_boxes : [
+		{
+			level : 1,
+			name : "Pyramid",
+			boundries : [
+				{ x : 313, y : 513, w : 160, h : 46 },
+				{ x : 343, y : 479, w :  97, h : 34 },
+				{ x : 366, y : 457, w :  50, h : 22 },				
+				{ x : 386, y : 438, w :  17, h : 15 }				
+			],
+			overlay : {
+				name : "overlay1",
+				x_pos : 301,
+				y_pos : 431
+			}
+		},
+		{
+			level : 2,
+			name : "Tomb",
+			boundries : [
+				{ x : 244, y : 494, w : 275, h : 66 },
+				{ x : 324, y : 433, w : 118, h : 61 },
+				{ x : 351, y : 420, w :  65, h : 13 }
+			],
+			overlay : {
+				name : "overlay2",
+				x_pos : 244,
+				y_pos : 417
+			}
+		},
+		{
+			level : 3,
+			name : "Monument",
+			boundries : [
+				{ x : 336, y : 314, w : 72, h : 245 },
+				{ x : 353, y : 294, w : 38, h : 20  }
+			],
+			overlay : {
+				name : "overlay3",
+				x_pos : 334,
+				y_pos : 287
+			}
+		},
+		{
+			level : 4,
+			name : "Great Pyramid",
+			boundries : [
+				{ x : 242, y : 498, w : 309, h : 61 },
+				{ x : 285, y : 448, w : 222, h : 50 },
+				{ x : 323, y : 401, w : 145, h : 48 },
+				{ x : 355, y : 362, w : 81, h : 39 },
+				{ x : 378, y : 337, w : 37, h : 25 },
+				{ x : 391, y : 319, w : 12, h : 18 }
+			],
+			overlay : {
+				name : "overlay4",
+				x_pos : 233,
+				y_pos : 310
+			}
+		}
+	]
+
+}
