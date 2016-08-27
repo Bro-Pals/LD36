@@ -818,15 +818,10 @@ function objectsAreColliding(_obj1, _obj2) {
 }
 
 function checkCollision(_obj1, _obj2) {
-	return(_obj1.pos[0] < _obj2.pos[0] + _obj2.size[0] &&
-		_obj1.pos[0] + _obj1.size[0] > _obj2.pos[0] &&
-		_obj1.pos[1] < _obj2.pos[1] + _obj2.size[1] &&
-		_obj1.size[1] + _obj1.pos[1] > _obj2.pos[1]);
+	
 }
 
 function getCompletedPercentage(_bricks, _goalBounds) {
-	
-	
 	
 }
 
