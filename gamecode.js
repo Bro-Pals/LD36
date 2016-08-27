@@ -361,7 +361,8 @@ var gameObjects = [ ];
 var pyramidShapeObjects = [ ];
 var decorObjects = [ ];
 var backgroundObjects = [ ];
-var guiObjects;
+var pauseButton = null;
+var paused = false;
 var mousePos = [ 0.0, 0.0 ];
 
 //Init WebGL variables that will be around for the whole game 
@@ -697,6 +698,7 @@ function removeObject(_obj) {
 		removeFromArray(_obj, backgroundObjects);
 	} else {
 		removeFromArray(_obj, gameObjects);
+		_obj.onDeleteFunc(_obj);
 	}
 }
 
@@ -820,6 +822,15 @@ function objectsAreColliding(_obj1, _obj2) {
            _obj1.pos[1]+_obj1.size[1] < _obj2.pos[1]);
 }
 
+function mousePositionInObject(_obj) {
+	var worldMouseX = (mousePos[0]*800.0/GameManager.getCanvasWidth());
+	var worldMouseY = (mousePos[1]*600.0/GameManager.getCanvasHeight());
+	return worldMouseX > _obj.pos[0] &&
+		worldMouseX < _obj.pos[0]+_obj.size[0] && 
+		worldMouseY > _obj.pos[1] && 
+		worldMouseY < _obj.pos[1]+_obj.size[1];
+}
+
 function checkCollision(_obj1, _obj2) {
 	
         var smallestMaxX = _obj2.pos[0] + _obj2.size[0]
@@ -919,36 +930,53 @@ function initPlayGame() {
 	clearObjectArrays();
 	curSampler = SAMPLER_TEXTURES;
 	addObject(createBackground(0, 0, 800, 600, "background"));
+	pauseButton = createDecor(790-64, 10, 64, 64, "pauseButton");
+	paused = false;
 }
 
 function updatePlayGame(_diff) {
-	for (var i=0; i < gameObjects.length; i++) {
-		gameObjects[i].updateFunc(gameObjects[i], _diff);
+	if (!paused) {
+		for (var i=0; i < gameObjects.length; i++) {
+			gameObjects[i].updateFunc(gameObjects[i], _diff);
+		}
 	}
 }
 
 function renderPlayGame() {
 	drawObjectArrays();
 	drawHoverBrick();
+	drawObject(pauseButton);
 }
 
 function mousePlayGame(_pressed, _x, _y) {
 	if (_pressed) {
-		var blockToAdd = createBrick(
-			(mousePos[0]*800.0/GameManager.getCanvasWidth())-32, 
-			(mousePos[1]*600.0/GameManager.getCanvasHeight())-32
-		);
-		var canAdd = true;
-		//Check to see if you can add it 
-		for (var i=0; i<gameObjects.length; i++) {
-			if (objectsAreColliding(blockToAdd, gameObjects[i])) {
-				canAdd = false;
-				break;
+		if (mousePositionInObject(pauseButton)) {
+			if (paused) {
+				paused = false;
+				pauseButton = createDecor(790-64, 10, 64, 64, "pauseButton");
+			} else {
+				paused = true;
+				pauseButton = createDecor(790-64, 10, 64, 64, "resumeButton");
 			}
+			return;
 		}
-		if (canAdd) {
-			//Passed through without intersecting any block
-			addObject(blockToAdd);
+		if (!paused) {
+			var blockToAdd = createBrick(
+				(mousePos[0]*800.0/GameManager.getCanvasWidth())-32, 
+				(mousePos[1]*600.0/GameManager.getCanvasHeight())-32
+			);
+			var canAdd = true;
+			//Check to see if you can add it 
+			for (var i=0; i<gameObjects.length; i++) {
+				if (objectsAreColliding(blockToAdd, gameObjects[i])) {
+					canAdd = false;
+					break;
+				}
+			}
+			if (canAdd) {
+				//Passed through without intersecting any block
+				addObject(blockToAdd);
+			}
 		}
 	}
 }
