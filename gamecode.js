@@ -828,7 +828,7 @@ function getCompletedPercentage(_bricks, _goalBounds) {
 function intersectArea(_b, _g) {
 	var i_w; // intersect width
 	var i_h; // intersect height
-	if (checkCollision(_b, _g) {
+	if (checkCollision(_b, _g)) {
 		if (_b.pos[0] >= _g.pos[0]) { // x axis
 			i_w = _g.size[0] - (_b.pos[0] - _g.pos[0]);
 		} else {
