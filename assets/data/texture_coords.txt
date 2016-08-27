@@ -1,0 +1,13 @@
+background       0    0     800  600
+block            0    2300  128  128
+continueButton   0    2640  256  256
+end              0    3490  800  600
+gameover         800  3490  800  600
+godeye           170  2290  256  256
+menuButton       270  2640  256  128
+meteor           500  2300  256  256
+pauseButton      1000 2640  128  128
+playButton       550  2640  256  128
+strongman        1300 2300  64   128
+title            0    2890  800  600
+transition0      0    610   800  600
