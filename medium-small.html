@@ -83,6 +83,14 @@
 					}
 				);
 			GameManager.setCanvas("gamecanvas", "webgl");
+			//Throw in some music
+			var music = document.getElementById("music");
+			music.addEventListener('ended', function() {
+				music.currentTime = 0;
+				music.play();
+			}, false);
+			music.play();
+			initSound();
 			initObjectDatas();
 			initWebGLParts();
 			GameManager.setState("mainMenu");
@@ -92,6 +100,8 @@
 	<!--Texture images-->
 	<img src="assets/img/textures.png" style="display:none;" id="texturesImage"></img>
 	<img src="assets/img/slides.png" style="display:none;" id="slidesImage"></img>
-	<!--Audio-->
+	<audio src="assets/music/songv1.ogg" id="music"></audio>
+	<audio src="assets/sound/brickfall.ogg" id="brickfall"></audio>
+	<audio src="assets/sound/pop.ogg" id="pop"></audio>
 </body>
 </html>

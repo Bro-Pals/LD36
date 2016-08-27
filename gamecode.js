@@ -40,8 +40,8 @@ var currentLevelGoalArea;
 /* Values related to meteor spawning */
 var meteorSpawnVals = {
 	currTime : 0,  // current time for next meteor
-	timeDecreasePerLevel : 75, //75,  // time decrease for each level
-	baseTime : 300 //450    // base time between meteors
+	timeDecreasePerLevel : 50, //75,  // time decrease for each level
+	baseTime : 275 //450    // base time between meteors
 };
 
 /* Values related to brick spawning */
@@ -302,7 +302,7 @@ var levelData = {
 };
 
 /* Container objects */
-var storyBoardPictures =  [ ];
+var storyBoardPictures =  [ "end" ];
 var objectData = { 
 	namesArray : [ ], //List of names 
 	indexBufferOffsetMap : [ ], //names mapped to offsets
@@ -331,7 +331,6 @@ var progression = null;
 function toStoryPicture(_story) {
 	onStory = _story;
 	GameManager.setState("storyBoard");
-	console.log("Story board " + _story);
 }
 
 function toLevel(_level) {
@@ -373,6 +372,9 @@ progression = [
 	function() {
 		toLevel(3);
 	},
+	function() {
+		toStoryPicture(0);
+	}
 ];
 
 function advanceStory() {
@@ -392,6 +394,14 @@ var backgroundObjects = [ ];
 var pauseButton = null;
 var paused = false;
 var mousePos = [ 0.0, 0.0 ];
+
+var brickFallSound;
+var popSound;
+
+function initSound() {
+	brickFallSound = document.getElementById("brickfall");
+	popSound = document.getElementById("pop");
+}
 
 //Init WebGL variables that will be around for the whole game 
 function initWebGLParts() {
@@ -629,6 +639,8 @@ function initObjectDatas() {
 /* Use these functions when adding and removing objects */
 
 function createBrick(_x, _y) {
+	popSound.currentTime = 0;
+	popSound.play();
 	return {
 		pos : [ _x, _y ],
 		vel : [ 0, GRAVITY_VELOCITY ], //Small downward velocity
@@ -794,11 +806,11 @@ function drawObjectArrays() {
 
 function drawHoverBrick() {
 	gl.uniform2f(objectProgramLocs.worldPosition,
-		(mousePos[0]*800.0/GameManager.getCanvasWidth())-32, 
-		(mousePos[1]*600.0/GameManager.getCanvasHeight())-32
+		(mousePos[0]*800.0/GameManager.getCanvasWidth())-24, 
+		(mousePos[1]*600.0/GameManager.getCanvasHeight())-24
 	);
 	//console.log("Mouse position: " + mousePos[0] + ", " + mousePos[1]);
-	gl.uniform2f(objectProgramLocs.worldSize, 32, 32);
+	gl.uniform2f(objectProgramLocs.worldSize, 24, 24);
 	gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, objectData.indexBufferOffsetMap["block"]);
 }
 
@@ -815,6 +827,8 @@ function updateBrick(_brick, _diff) {
 	//Make sure it doesn't fall through the floor
 	if (_brick.pos[1] > 560.0-_brick.size[1]) {
 		_brick.pos[1] = 560-_brick.size[1];
+		brickFallSound.currentTime = 0;
+		brickFallSound.play();
 	}
 }
 
@@ -932,6 +946,10 @@ function checkCollision(_obj1, _obj2) {
 				}
 				_obj1.vel[0] = 0;
             }
+			if (_obj1.type == TYPE_BRICK || _obj2.type == TYPE_BRICK) {
+				brickFallSound.currentTime = 0;
+				brickFallSound.play();
+			}
             //Do the things that happens when they collide 
 			//with each other here
 			
@@ -992,6 +1010,7 @@ function initMainMenu() {
 	clearObjectArrays();
 	curSampler = SAMPLER_TEXTURES;
 	addObject(createBackground(0, 0, 800, 600, "title"));
+	addObject(createDecor(272, 366, 256, 128, "playButton"));
 }
 
 function mouseMainMenu(_pressed, _x, _y) {
@@ -1004,7 +1023,8 @@ function mouseMainMenu(_pressed, _x, _y) {
 
 function initStoryBoard() {
 	clearObjectArrays();
-	curSampler = SAMPLER_SLIDES;
+	curSampler = SAMPLER_TEXTURES;
+	addObject(createBackground(0, 0, 800, 600, "end"));
 }
 
 function mouseStoryBoard(_pressed, _x, _y) {
@@ -1068,7 +1088,7 @@ function updatePlayGame(_diff) {
 		// modify the complete percentage
 		completePercent = completePercent / 0.9;
 		console.log("COMPLETE PERCENTAGE: " + completePercent + "");
-		if (completePercent > 0.8) {
+		if (completePercent > 0.74) {
 			advanceStory();
 		}
 	}
@@ -1097,8 +1117,8 @@ function mousePlayGame(_pressed, _x, _y) {
 		brickSpawnVals.currTime = 0;				
 		if (!paused) {
 			var blockToAdd = createBrick(
-				(mousePos[0]*800.0/GameManager.getCanvasWidth())-32, 
-				(mousePos[1]*600.0/GameManager.getCanvasHeight())-32
+				(mousePos[0]*800.0/GameManager.getCanvasWidth())-24, 
+				(mousePos[1]*600.0/GameManager.getCanvasHeight())-24
 			);
 			var canAdd = true;
 			//Check to see if you can add it 
