@@ -31,6 +31,9 @@ var SAMPLER_SLIDES = 1;
 var curSampler = 0;
 
 
+/* Gravity constant */
+var GRAVITY_VELOCITY = 5.0;
+
 /* Texture coordinate raw data */
 var objectTexCoordData = {
 	texture_coords : [
@@ -598,8 +601,8 @@ function initObjectDatas() {
 function createBrick(_x, _y) {
 	return {
 		pos : [ _x, _y ],
+		vel : [ 0, GRAVITY_VELOCITY ], //Small downward velocity
 		size : [ 32, 32 ],
-		vel : [ 0, 5 ], //Small downward velocity
 		updateFunc : updateBrick,
 		onDeleteFunc : onDeleteBrick,
 		bufferOffset : objectData.indexBufferOffsetMap["block"],
@@ -611,7 +614,7 @@ function createMeteor(_x, _y, _velX, _velY) {
 	return {
 		pos : [ _x, _y ],
 		size : [ 64, 64 ],
-		vel : [ velX, velY ], //Small downward velocity
+		vel : [ velX, velY ], // function set velocity
 		updateFunc : updateMeteor,
 		onDeleteFunc : onDeleteMeteor,
 		bufferOffset : objectData.indexBufferOffsetMap["meteor"],
@@ -761,8 +764,10 @@ function drawHoverBrick() {
 
 /* Specific per-type functions */
 
+
 function updateBrick(_brick, _diff) {
-	_brick.pos[1] += 4.0;
+	_brick.pos[0] += _brick.vel[0];
+	_brick.pos[1] += _brick.vel[1];
 	//Check to see if it will collide with something, and if
 	//it does, then stop it from moving 
 	doCollisionChecking(_brick);
@@ -772,8 +777,9 @@ function updateBrick(_brick, _diff) {
 	}
 }
 
-function updateMeteor(_meteor, _diff) {
-	
+function updateMeteor(_meteor, _diff) {	
+	_meteor.pos[0] += _meteor.vel[0];
+	_meteor.pos[1] += _meteor.vel[1];
 }
 
 function updateStrongMan(_strongMan, _diff) {
@@ -812,7 +818,38 @@ function objectsAreColliding(_obj1, _obj2) {
 }
 
 function checkCollision(_obj1, _obj2) {
+	return(_obj1.pos[0] < _obj2.pos[0] + _obj2.size[0] &&
+		_obj1.pos[0] + _obj1.size[0] > _obj2.pos[0] &&
+		_obj1.pos[1] < _obj2.pos[1] + _obj2.size[1] &&
+		_obj1.size[1] + _obj1.pos[1] > _obj2.pos[1]);
+}
+
+function getCompletedPercentage(_bricks, _goalBounds) {
 	
+	
+	
+}
+
+function intersectArea(_b, _g) {
+	float i_w; // intersect width
+	float i_h; // intersect height
+	if (checkCollision(_b, _g) {
+		if (_b.pos[0] >= _g.pos[0]) { // x axis
+			i_w = _g.size[0] - (_b.pos[0] - _g.pos[0]);
+		} else {
+			i_w = _b.size[0] - (_g.pos[0] - _b.pos[0])
+		}
+		if (_b.pos[1] >= _g.pos[1]) { // y axis
+			i_h = _g.size[1] - (_b.pos[1] - _g.pos[1]);
+		} else {
+			i_h = _b.size[1] - (_g.pos[1] - _b.pos[0])
+		}
+	} else {  // no intersection
+		i_w = 0; 
+		i_h = 0;
+	}
+	
+	return i_w * i_h;
 }
 
 /* MAIN MENU STATE FUNCTIONS */
