@@ -38,120 +38,154 @@ var objectTexCoordData = {
 			name : "background",
 			x : 800,
 			y : 842,
-			width: 800,
-			height: 600
+			image_width: 800,
+			image_height: 600,
+			world_width: 800,
+			world_height: 600
 		},
 		{ 
 			name : "block",
 			x : 0,
 			y : 252,
-			width: 128,
-			height: 128
+			image_width: 128,
+			image_height: 128,
+			world_width: 32,
+			world_height: 32
 		},
 		{ 
 			name : "continueButton",
 			x : 0,
 			y : 592,
-			width: 256,
-			height: 256
+			image_width: 256,
+			image_height: 256,
+			world_width: 256,
+			world_height: 256
 		},
 		{ 
 			name : "end",
 			x : 0,
 			y : 1442,
-			width: 800,
-			height: 600
+			image_width: 800,
+			image_height: 600,
+			world_width: 800,
+			world_height: 600
 		},
 		{ 
 			name : "gameover",
 			x : 800,
 			y : 1442,
-			width: 800,
-			height: 600
+			image_width: 800,
+			image_height: 600,
+			world_width: 800,
+			world_height: 600
 		},
 		{ 
 			name : "godeye",
 			x : 170,
 			y : 242,
-			width: 256,
-			height: 256
+			image_width: 256,
+			image_height: 256,
+			world_width: 256,
+			world_height: 256
 		},
 		{ 
 			name : "menuButton",
 			x : 270,
 			y : 592,
-			width: 256,
-			height: 128
+			image_width: 256,
+			image_height: 128,
+			world_width: 256,
+			world_height: 128
 		},
 		{ 
 			name : "meteor",
 			x : 500,
 			y : 252,
-			width: 256,
-			height: 256
+			image_width: 256,
+			image_height: 256,
+			world_width: 256,
+			world_height: 256
 		},
 		{ 
 			name : "pauseButton",
 			x : 1000,
 			y : 592,
-			width: 128,
-			height: 128
+			image_width: 128,
+			image_height: 128,
+			world_width: 128,
+			world_height: 128
 		},
 		{ 
 			name : "playButton",
 			x : 550,
 			y : 592,
-			width: 256,
-			height: 128
+			image_width: 256,
+			image_height: 128,
+			world_width: 256,
+			world_height: 128
 		},
 		{ 
 			name : "strongman",
 			x : 1300,
 			y : 252,
-			width: 64,
-			height: 128
+			image_width: 64,
+			image_height: 128,
+			world_width: 64,
+			world_height: 128
 		},
 		{ 
 			name : "title",
 			x : 0,
 			y : 842,
-			width: 800,
-			height: 600
+			image_width: 800,
+			image_height: 600,
+			world_width: 800,
+			world_height: 600
 		},
 		{ 
 			name : "resumeButton",
 			x : 1128,
 			y : 592,
-			width: 128,
-			height: 128
+			image_width: 128,
+			image_height: 128,
+			world_width: 128,
+			world_height: 128
 		},
 		{
 			name : "overlay1",
 			x : 1605,
 			y : 842,
-			width : 181,
-			height : 129
+			image_width : 181,
+			image_height : 129,
+			world_width : 181,
+			world_height : 129
 		},
 		{
 			name : "overlay2",
 			x : 1605,
 			y : 975,
-			width : 280,
-			height : 144
+			image_width : 280,
+			image_height : 144,
+			world_width : 280,
+			world_height : 144
 		},
 		{
 			name : "overlay3",
 			x : 1888,
 			y : 844,
-			width : 76,
-			height : 275
+			image_width : 76,
+			image_height : 275,
+			world_width : 76,
+			world_height : 275
 		},
 		{
 			name : "overlay4",
 			x : 1605,
 			y : 1122,
-			width : 336,
-			height : 250
+			image_width : 336,
+			image_height : 250,
+			world_width : 336,
+			world_height : 250
 		}
 	],
 	imageWidth : 2048.0,
@@ -164,8 +198,10 @@ var slideTexCoordData = {
 			name : "slide1",
 			x : 0,
 			y : 0,
-			width: 800,
-			height: 600
+			image_width: 800,
+			image_height: 600,
+			world_width: 800,
+			world_height: 600
 		}
 	],
 	imageWidth : 2048.0,
@@ -242,6 +278,7 @@ var storyBoardPictures =  [ ];
 var objectData = { 
 	namesArray : [ ], //List of names 
 	indexBufferOffsetMap : [ ], //names mapped to offsets
+	sizesMap : [ ], //names mapped to sizes
 	sizesMap : [ ], //names mapped to sizes
 	textureCoordsMap : [ ], //names mapped to texture coordinates
 };
@@ -452,6 +489,9 @@ function initWebGLParts() {
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 	
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+	
 	/* Enable features */
 }
 
@@ -471,8 +511,10 @@ function initWebGLParts() {
 function initObjectData(_dataObject, _rawObject) {
 	var i;
 	var theName = null;
-	var theWidth = null;
-	var theHeight = null;
+	var theImageWidth = null;
+	var theImageHeight = null;
+	var theWorldWidth = null;
+	var theWorldHeight = null;
 	var theX = null;
 	var theY = null;
 	/*
@@ -481,8 +523,10 @@ function initObjectData(_dataObject, _rawObject) {
 	*/
 	for (i = 0; i < _rawObject.texture_coords.length; i++) {
 		theName = _rawObject.texture_coords[i].name;
-		theWidth = _rawObject.texture_coords[i].width;
-		theHeight = _rawObject.texture_coords[i].height;
+		theImageWidth = _rawObject.texture_coords[i].image_width;
+		theImageHeight = _rawObject.texture_coords[i].image_height;
+		theWorldWidth = _rawObject.texture_coords[i].world_width;
+		theWorldHeight = _rawObject.texture_coords[i].world_height;
 		theX = _rawObject.texture_coords[i].x;
 		theY = _rawObject.texture_coords[i].y;
 		
@@ -502,12 +546,12 @@ function initObjectData(_dataObject, _rawObject) {
 		//image coordinate information (x, y) and (width, height)
 		_dataObject.textureCoordsMap[theName] = [
 			theX/_rawObject.imageWidth, theY/_rawObject.imageHeight,
-			theX/_rawObject.imageWidth, (theY+theHeight)/_rawObject.imageHeight,
-			(theX+theWidth)/_rawObject.imageWidth, (theY+theHeight)/_rawObject.imageHeight,
-			(theX+theWidth)/_rawObject.imageWidth, theY/_rawObject.imageHeight,
+			theX/_rawObject.imageWidth, (theY+theImageHeight)/_rawObject.imageHeight,
+			(theX+theImageWidth)/_rawObject.imageWidth, (theY+theImageHeight)/_rawObject.imageHeight,
+			(theX+theImageWidth)/_rawObject.imageWidth, theY/_rawObject.imageHeight,
 		];
 		//Set the data for the sizes array
-		_dataObject.sizesMap[theName] = [ theWidth, theHeight ];
+		_dataObject.sizesMap[theName] = [ theWorldWidth, theWorldHeight ];
 		//Calculate the byte offset to get to the first index in
 		//the (not yet created) index array.
 		//6 indicies per 4 texture coordinates (4 verticies per shape).
@@ -554,7 +598,7 @@ function initObjectDatas() {
 function createBrick(_x, _y) {
 	return {
 		pos : [ _x, _y ],
-		size : [ 64, 64 ],
+		size : [ 32, 32 ],
 		vel : [ 0, 5 ], //Small downward velocity
 		updateFunc : updateBrick,
 		onDeleteFunc : onDeleteBrick,
@@ -706,13 +750,12 @@ function drawObjectArrays() {
 }
 
 function drawHoverBrick() {
-	var brickObjectSize = objectData.sizesMap["block"];
 	gl.uniform2f(objectProgramLocs.worldPosition,
-		mousePos[0], 
-		mousePos[1]
+		(mousePos[0]*800.0/GameManager.getCanvasWidth())-32, 
+		(mousePos[1]*600.0/GameManager.getCanvasHeight())-32
 	);
-	console.log("Mouse position: " + mousePos[0] + ", " + mousePos[1]);
-	gl.uniform2f(objectProgramLocs.worldSize, brickObjectSize[0], brickObjectSize[1]);
+	//console.log("Mouse position: " + mousePos[0] + ", " + mousePos[1]);
+	gl.uniform2f(objectProgramLocs.worldSize, 32, 32);
 	gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, objectData.indexBufferOffsetMap["block"]);
 }
 
