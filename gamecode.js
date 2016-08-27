@@ -295,7 +295,16 @@ function toLevel(_level) {
 progression = [ 
 	function() {
 		toLevel(0);
-	}
+	},
+	function() {
+		toLevel(1);
+	},
+	function() {
+		toLevel(2);
+	},
+	function() {
+		toLevel(3);
+	},
 ];
 
 function advanceStory() {

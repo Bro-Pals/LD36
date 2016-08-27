@@ -20,8 +20,8 @@
 			gl_Position = vec4(
 				//Transform so that the object's top left is their 0,0 and to
 				//account for a different sized canvas
-				(vertexPos.x-worldPosition.x+halfWidth-400.0)/(400.0),
-				-(vertexPos.y-worldPosition.y+halfHeight-300.0)/(300.0),
+				(vertexPos.x+worldPosition.x+halfWidth-400.0)/(400.0),
+				-(vertexPos.y+worldPosition.y+halfHeight-300.0)/(300.0),
 				0.0,
 				1.0
 			);
