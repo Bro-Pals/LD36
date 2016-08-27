@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<script src="lib/gamethings.js"></script>
+	<script src="gamecode.js"></script>
+	<script type="x-shader/x-vertex" id="vshader">
+		attribute vec2 vertexPos; //Vertex data
+		attribute vec2 texCoord; //Raw texture coordinate data 
+		varying mediump vec2 varyingTexCoord; 
+		uniform vec2 worldPosition; //Position of object in game world (World coordinates) 
+		uniform vec2 worldSize;
+		uniform vec2 screenSize; //(width, height) of the game screen in screen coordinates 
+		//*The size of the view for world coordinates is the same scale as screen coordinates*
+		
+		void main() {
+			varyingTexCoord = texCoord; //Pass it on to the fragment shader 
+			float halfScreenWidth = screenSize.x/2.0;
+			float halfScreenHeight = screenSize.y/2.0;
+			float halfWidth = worldSize.x/2.0;
+			float halfHeight = worldSize.y/2.0;
+			gl_Position = vec4(
+				//Transform so that the object's top left is their 0,0 and to
+				//account for a different sized canvas
+				(vertexPos.x-worldPosition.x+halfWidth-400.0)/halfScreenWidth*(halfScreenWidth/400.0),
+				-(vertexPos.y-worldPosition.y+halfHeight-300.0)/halfScreenHeight*(halfScreenHeight/300.0),
+				0.0,
+				1.0
+			);
+		}
+		
+	</script>
+	<script type="x-shader/x-fragment" id="fshader">
+		//Need to give a precision if it isn't GL_ES (?)
+
+		varying mediump vec2 varyingTexCoord;
+		uniform sampler2D tex; //Sampler for the texture 
+		
+		void main() {
+			lowp vec4 col = texture2D(tex, varyingTexCoord);//Get the texture
+			if (col.w < 1.0)
+				discard;
+			gl_FragColor = col;
+			//Discard fragment if it is transparent
+		}
+		
+	</script>
+</head>
+<body onload="startGame()">
+	<!--Our game canvas!-->
+	<canvas width="600" height="450" id="gamecanvas" style="
+		margin-left:auto;
+		margin-right:auto;
+		display:block;
+	"></canvas>
+	<script>
+		function startGame() {
+			GameManager.createState(
+				"mainMenu",
+				initMainMenu,
+				noFunc,
+				drawObjectArrays,
+					{
+					mouse : mouseMainMenu,
+					}
+				);
+			GameManager.createState(
+				"storyBoard",
+				initStoryBoard,
+				noFunc,
+				drawObjectArrays,
+					{
+					mouse : mouseStoryBoard,
+					}
+				);
+			GameManager.createState(
+				"playGame",
+				initPlayGame,
+				updatePlayGame,
+				renderPlayGame,
+					{
+					mouse : mousePlayGame,
+					mouseMove : mouseMovePlayGame
+					}
+				);
+			GameManager.setCanvas("gamecanvas", "webgl");
+			initObjectDatas();
+			initWebGLParts();
+			GameManager.setState("mainMenu");
+			GameManager.loop();
+		}
+	</script>
+	<!--Texture images-->
+	<img src="assets/img/textures.png" style="display:none;" id="texturesImage"></img>
+	<img src="assets/img/slides.png" style="display:none;" id="slidesImage"></img>
+	<!--Audio-->
+</body>
+</html>
