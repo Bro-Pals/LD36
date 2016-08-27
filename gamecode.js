@@ -40,14 +40,14 @@ var currentLevelGoalArea;
 /* Values related to meteor spawning */
 var meteorSpawnVals = {
 	currTime : 0,  // current time for next meteor
-	timeDecreasePerLevel : 40, //75,  // time decrease for each level
+	timeDecreasePerLevel : 75, //75,  // time decrease for each level
 	baseTime : 300 //450    // base time between meteors
 };
 
 /* Values related to brick spawning */
 var brickSpawnVals = {
 	currTime : 0,
-	delay : 7
+	delay : 3
 }
 
 /* Values to limit checking for completion */
@@ -77,8 +77,8 @@ var objectTexCoordData = {
 			y : 252,
 			image_width: 128,
 			image_height: 128,
-			world_width: 32,
-			world_height: 32
+			world_width: 24,
+			world_height: 24
 		},
 		{ 
 			name : "continueButton",
@@ -632,7 +632,7 @@ function createBrick(_x, _y) {
 	return {
 		pos : [ _x, _y ],
 		vel : [ 0, GRAVITY_VELOCITY ], //Small downward velocity
-		size : [ 32, 32 ],
+		size : [ 22, 22 ],
 		updateFunc : updateBrick,
 		onDeleteFunc : onDeleteBrick,
 		bufferOffset : objectData.indexBufferOffsetMap["block"],
@@ -1038,7 +1038,7 @@ function updatePlayGame(_diff) {
 	}
 	
 	// Update the meteor spawning.
-	var spawnTime = meteorSpawnVals.baseTime - meteorSpawnVals.timeDecreasePerLevel;
+	var spawnTime = meteorSpawnVals.baseTime - onLevel*meteorSpawnVals.timeDecreasePerLevel;
 	//console.log("meteorSpawnVals.currTime = " + (meteorSpawnVals.currTime));
 	//console.log("spawnTime = " + (spawnTime));
 	if (meteorSpawnVals.currTime > spawnTime) {
