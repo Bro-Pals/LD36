@@ -644,7 +644,7 @@ function removeObject(_obj) {
 }
 
 function drawObject(_obj) {
-	console.log("Drawing:\nx " + _obj.pos[0] + "\ny " + _obj.pos[1] + "\nwidth " + _obj.size[0] + "\nheight " + _obj.size[1] + "\noffset " + _obj.bufferOffset);
+	//console.log("Drawing:\nx " + _obj.pos[0] + "\ny " + _obj.pos[1] + "\nwidth " + _obj.size[0] + "\nheight " + _obj.size[1] + "\noffset " + _obj.bufferOffset);
 	gl.uniform2f(objectProgramLocs.worldPosition, _obj.pos[0], _obj.pos[1]);
 	gl.uniform2f(objectProgramLocs.worldSize, _obj.size[0], _obj.size[1]);
 	gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, _obj.bufferOffset);
@@ -702,6 +702,7 @@ function drawHoverBrick() {
 		mousePos[0], 
 		mousePos[1]
 	);
+	console.log("Mouse position: " + mousePos[0] + ", " + mousePos[1]);
 	gl.uniform2f(objectProgramLocs.worldSize, brickObjectSize[0], brickObjectSize[1]);
 	gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, objectData.indexBufferOffsetMap["block"]);
 }
