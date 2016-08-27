@@ -356,7 +356,7 @@ function toLevel(_level) {
 			levelObject.overlay.name
 		));
 	
-	console.log("Level " + _level);
+	//console.log("Level " + _level);
 }
 
 progression = [ 
@@ -975,8 +975,8 @@ function getCompletedPercentage() {
 			}
 		}
 	}
-	console.log("totalIntersectionArea = " + totalIntersectionArea);
-	console.log("currentLevelGoalArea = " + currentLevelGoalArea);
+	//console.log("totalIntersectionArea = " + totalIntersectionArea);
+	//console.log("currentLevelGoalArea = " + currentLevelGoalArea);
 	return totalIntersectionArea / currentLevelGoalArea;
 }
 
@@ -1010,7 +1010,7 @@ function initMainMenu() {
 	clearObjectArrays();
 	curSampler = SAMPLER_TEXTURES;
 	addObject(createBackground(0, 0, 800, 600, "title"));
-	addObject(createDecor(272, 366, 256, 128, "playButton"));
+	addObject(createDecor(272, 420, 256, 128, "playButton"));
 }
 
 function mouseMainMenu(_pressed, _x, _y) {
@@ -1087,7 +1087,7 @@ function updatePlayGame(_diff) {
 		var completePercent = getCompletedPercentage();
 		// modify the complete percentage
 		completePercent = completePercent / 0.9;
-		console.log("COMPLETE PERCENTAGE: " + completePercent + "");
+		//console.log("COMPLETE PERCENTAGE: " + completePercent + "");
 		if (completePercent > 0.74) {
 			advanceStory();
 		}
