@@ -11,7 +11,6 @@
 		uniform vec2 worldPosition; //Position of object in game world (World coordinates) 
 		uniform vec2 worldSize;
 		uniform vec2 screenSize; //(width, height) of the game screen in screen coordinates 
-		uniform float depthValue;
 		//*The size of the view for world coordinates is the same scale as screen coordinates*
 		
 		void main() {
@@ -25,7 +24,7 @@
 				//account for a different sized canvas
 				(vertexPos.x-worldPosition.x+halfWidth-400.0)/halfScreenWidth*(halfScreenWidth/400.0),
 				-(vertexPos.y-worldPosition.y+halfHeight-300.0)/halfScreenHeight*(halfScreenHeight/300.0),
-				depthValue,
+				0.0,
 				1.0
 			);
 		}
@@ -38,7 +37,11 @@
 		uniform sampler2D tex; //Sampler for the texture 
 		
 		void main() {
-			gl_FragColor = texture2D(tex, varyingTexCoord); //Get the texture 
+			lowp vec4 col = texture2D(tex, varyingTexCoord);//Get the texture
+			if (col.w < 1.0)
+				discard;
+			gl_FragColor = col;
+			//Discard fragment if it is transparent
 		}
 		
 	</script>
@@ -58,9 +61,7 @@
 				noFunc,
 				drawObjectArrays,
 					{
-					key : null,
 					mouse : mouseMainMenu,
-					mouseMove : null
 					}
 				);
 			GameManager.createState(
@@ -69,18 +70,15 @@
 				noFunc,
 				drawObjectArrays,
 					{
-					key : null,
 					mouse : mouseStoryBoard,
-					mouseMove : null
 					}
 				);
 			GameManager.createState(
 				"playGame",
 				initPlayGame,
 				updatePlayGame,
-				drawObjectArrays,
+				renderPlayGame,
 					{
-					key : null,
 					mouse : mousePlayGame,
 					mouseMove : mouseMovePlayGame
 					}

@@ -3,11 +3,15 @@
 	An arcade like game about defending your pyramid
 */
 
+//Empty function 
+function noFunc() { }
+
 var TYPE_BRICK = 0; //Bricks that fall and count towards the pyramid
 var TYPE_METEOR = 1; //Fall and shash into bricks to blow them up 
 var TYPE_STRONG_MAN = 2; //Walk towards the pyramid and punch blocks
 var TYPE_PRYAMID_SHAPE = 3; //Defines the pyramid shape (separate array)
 var TYPE_DECOR = 4; //No collision and is drawn in the background (separate array)
+var TYPE_BACKGROUND = 5;
 
 /* WebGL variables */
 var arrayBufferName = 0;
@@ -19,7 +23,6 @@ var objectProgramLocs = {
 	worldPosition : null, //(vec2 uniform)
 	worldSize : null, //(vec2 uniform)
 	screenSize : null,
-	depthValue : null,
 	tex : null
 };
 var texturesTex; //Texture object for textures 
@@ -115,6 +118,41 @@ var objectTexCoordData = {
 			y : 842,
 			width: 800,
 			height: 600
+		},
+		{ 
+			name : "resumeButton",
+			x : 1128,
+			y : 592,
+			width: 128,
+			height: 128
+		},
+		{
+			name : "overlay1",
+			x : 1605,
+			y : 842,
+			width : 181,
+			height : 129
+		},
+		{
+			name : "overlay2",
+			x : 1605,
+			y : 975,
+			width : 280,
+			height : 144
+		},
+		{
+			name : "overlay3",
+			x : 1888,
+			y : 844,
+			width : 76,
+			height : 275
+		},
+		{
+			name : "overlay4",
+			x : 1605,
+			y : 1122,
+			width : 336,
+			height : 250
 		}
 	],
 	imageWidth : 2048.0,
@@ -135,9 +173,73 @@ var slideTexCoordData = {
 	imageHeight: 2048.0
 };
 
+var levelData = {
+	level_goal_boxes : [
+		{
+			level : 1,
+			name : "Pyramid",
+			boundries : [
+				{ x : 313, y : 513, w : 160, h : 46 },
+				{ x : 343, y : 479, w :  97, h : 34 },
+				{ x : 366, y : 457, w :  50, h : 22 },				
+				{ x : 386, y : 438, w :  17, h : 15 }				
+			],
+			overlay : {
+				name : "overlay1",
+				x_pos : 301,
+				y_pos : 431
+			}
+		},
+		{
+			level : 2,
+			name : "Tomb",
+			boundries : [
+				{ x : 244, y : 494, w : 275, h : 66 },
+				{ x : 324, y : 433, w : 118, h : 61 },
+				{ x : 351, y : 420, w :  65, h : 13 }
+			],
+			overlay : {
+				name : "overlay2",
+				x_pos : 244,
+				y_pos : 417
+			}
+		},
+		{
+			level : 3,
+			name : "Monument",
+			boundries : [
+				{ x : 336, y : 314, w : 72, h : 245 },
+				{ x : 353, y : 294, w : 38, h : 20  }
+			],
+			overlay : {
+				name : "overlay3",
+				x_pos : 334,
+				y_pos : 287
+			}
+		},
+		{
+			level : 4,
+			name : "Great Pyramid",
+			boundries : [
+				{ x : 242, y : 498, w : 309, h : 61 },
+				{ x : 285, y : 448, w : 222, h : 50 },
+				{ x : 323, y : 401, w : 145, h : 48 },
+				{ x : 355, y : 362, w : 81, h : 39 },
+				{ x : 378, y : 337, w : 37, h : 25 },
+				{ x : 391, y : 319, w : 12, h : 18 }
+			],
+			overlay : {
+				name : "overlay4",
+				x_pos : 233,
+				y_pos : 310
+			}
+		}
+	]
+
+};
+
 /* Container objects */
 var storyBoardPictures =  [ ];
-var levelParams = [ ];
 var objectData = { 
 	namesArray : [ ], //List of names 
 	indexBufferOffsetMap : [ ], //names mapped to offsets
@@ -165,21 +267,40 @@ var progression = null;
 function toStoryPicture(_story) {
 	onStory = _story;
 	GameManager.setState("storyBoard");
+	console.log("Story board " + _story);
 }
 
 function toLevel(_level) {
 	onLevel = _level;
 	GameManager.setState("playGame");
+	//Build the level
+	var levelObject = levelData.level_goal_boxes[onLevel];
+	for (var i=0; i<levelObject.boundries.length; i++) {
+		addObject(createPyramidShape(
+				levelObject.boundries.x,
+				levelObject.boundries.y,
+				levelObject.boundries.w,
+				levelObject.boundries.h
+			));
+	}
+	addObject(createDecor(
+			levelObject.overlay.x_pos,
+			levelObject.overlay.y_pos,
+			objectData.sizesMap[levelObject.overlay.name][0],
+			objectData.sizesMap[levelObject.overlay.name][1],
+			levelObject.overlay.name
+		));
+	console.log("Level " + _level);
 }
 
-progression = { 
+progression = [ 
 	function() {
-		toStoryPicture(0);
+		toLevel(0);
 	}
-};
+];
 
 function advanceStory() {
-	if (progressionPointer < progression.length-1) {
+	if (progressionPointer < progression.length) {
 		progression[progressionPointer]();
 		progressionPointer++;
 	}
@@ -191,6 +312,8 @@ function advanceStory() {
 var gameObjects = [ ];
 var pyramidShapeObjects = [ ];
 var decorObjects = [ ];
+var backgroundObjects = [ ];
+var mousePos = [ 0.0, 0.0 ];
 
 //Init WebGL variables that will be around for the whole game 
 function initWebGLParts() {
@@ -203,7 +326,6 @@ function initWebGLParts() {
 	objectProgramLocs.worldPosition = gl.getUniformLocation(objectProgram, "worldPosition");
 	objectProgramLocs.worldSize = gl.getUniformLocation(objectProgram, "worldSize");
 	objectProgramLocs.screenSize = gl.getUniformLocation(objectProgram, "screenSize");
-	objectProgramLocs.depthValue = gl.getUniformLocation(objectProgram, "depthValue");
 	objectProgramLocs.tex = gl.getUniformLocation(objectProgram, "tex");
 	
 	/* Create the array and index array buffers */
@@ -323,6 +445,7 @@ function initWebGLParts() {
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 	
+	/* Enable features */
 }
 
 /*
@@ -384,7 +507,7 @@ function initObjectData(_dataObject, _rawObject) {
 		//Using a Uint16Array to store indicies (gl.UNSIGNED_INT)
 		_dataObject.indexBufferOffsetMap[theName] = 6 * i * Uint16Array.BYTES_PER_ELEMENT;
 	
-		console.log("Initialized data for " + theName + "; block offset is " + _dataObject.indexBufferOffsetMap[theName] );
+		//console.log("Initialized data for " + theName + "; block offset is " + _dataObject.indexBufferOffsetMap[theName] );
 	}
 	
 	/*
@@ -481,10 +604,17 @@ function createDecor(_x, _y, _w, _h, _texture) {
 	};
 }
 
+function createBackground(_x, _y, _w, _h, _texture) {
+	var bg = createDecor(_x, _y, _w, _h, _texture);
+	bg.type = TYPE_BACKGROUND;
+	return bg;
+}
+
 function clearObjectArrays() {
 	gameObjects.length = 0;
 	decorObjects.length = 0;
 	pyramidShapeObjects.length = 0;
+	backgroundObjects.length = 0;
 }
 
 function removeFromArray(_obj, arr) {
@@ -496,6 +626,8 @@ function addObject(_obj) {
 		decorObjects.push(_obj);
 	} else if (_obj.type == TYPE_PRYAMID_SHAPE) {
 		pyramidShapeObjects.push(_obj);
+	} else if (_obj.type == TYPE_BACKGROUND) {
+		backgroundObjects.push(_obj);
 	} else {
 		gameObjects.push(_obj);
 	}
@@ -506,6 +638,8 @@ function removeObject(_obj) {
 		removeFromArray(_obj, decorObjects);
 	} else if (_obj.type == TYPE_PRYAMID_SHAPE) {
 		removeFromArray(_obj, pyramidShapeObjects);
+	} else if (_obj.type == TYPE_BACKGROUND) {
+		removeFromArray(_obj, backgroundObjects);
 	} else {
 		removeFromArray(_obj, gameObjects);
 	}
@@ -545,20 +679,34 @@ function drawObjectArrays() {
 	gl.enableVertexAttribArray(objectProgramLocs.vertexPos);
 	gl.enableVertexAttribArray(objectProgramLocs.texCoord);
 	var i; //iterator
-	if (gameObjects.length != 0) {
-		//Regular objects are out in the foreground
-		gl.uniform1f(objectProgramLocs.depthValue, 0.0);
-		for (i=0; i<gameObjects.length; i++) {
-			drawObject(gameObjects[i]);
+	if (backgroundObjects.length != 0) {
+		//Backgrounds first
+		for (i=0; i<backgroundObjects.length; i++) {
+			drawObject(backgroundObjects[i]);		
 		}
 	}
 	if (decorObjects.length != 0) {
-		//Decorations are in the background
-		gl.uniform1f(objectProgramLocs.depthValue, 0.2);
+		//Then decorations
 		for (i=0; i<decorObjects.length; i++) {
 			drawObject(decorObjects[i]);		
 		}
 	}
+	if (gameObjects.length != 0) {
+		//Then regular objects
+		for (i=0; i<gameObjects.length; i++) {
+			drawObject(gameObjects[i]);
+		}
+	}
+}
+
+function drawHoverBrick() {
+	var brickObjectSize = objectData.sizesMap["block"];
+	gl.uniform2f(objectProgramLocs.worldPosition,
+		mousePos[0], 
+		mousePos[1]
+	);
+	gl.uniform2f(objectProgramLocs.worldSize, brickObjectSize[0], brickObjectSize[1]);
+	gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, objectData.indexBufferOffsetMap["block"]);
 }
 
 /* Specific per-type functions */
@@ -589,9 +737,6 @@ function onDeleteStrongMan(_strongMan) {
 	
 }
 
-//Empty function 
-function noFunc() { }
-
 function checkCollision(_obj1, _obj2) {
 	
 }
@@ -601,7 +746,7 @@ function checkCollision(_obj1, _obj2) {
 function initMainMenu() {
 	clearObjectArrays();
 	curSampler = SAMPLER_TEXTURES;
-	addObject(createDecor(0, 0, 800, 600, "title"));
+	addObject(createBackground(0, 0, 800, 600, "title"));
 }
 
 function mouseMainMenu(_pressed, _x, _y) {
@@ -626,10 +771,16 @@ function mouseStoryBoard(_pressed, _x, _y) {
 function initPlayGame() {
 	clearObjectArrays();
 	curSampler = SAMPLER_TEXTURES;
+	addObject(createBackground(0, 0, 800, 600, "background"));
 }
 
 function updatePlayGame(_diff) {
 	
+}
+
+function renderPlayGame() {
+	drawObjectArrays();
+	drawHoverBrick();
 }
 
 function mousePlayGame(_pressed, _x, _y) {
@@ -637,7 +788,8 @@ function mousePlayGame(_pressed, _x, _y) {
 }
 
 function mouseMovePlayGame(_x, _y) {
-	
+	mousePos[0] = _x;
+	mousePos[1] = _y;
 }
 
 /* GRAPHIC EFFECT FUNCTIONS */
