@@ -40,14 +40,20 @@ var currentLevelGoalArea;
 /* Values related to meteor spawning */
 var meteorSpawnVals = {
 	currTime : 0,  // current time for next meteor
-	timeDecreasePerLevel : 15, //75,  // time decrease for each level
-	baseTime : 100 //450    // base time between meteors
+	timeDecreasePerLevel : 40, //75,  // time decrease for each level
+	baseTime : 300 //450    // base time between meteors
 };
 
 /* Values related to brick spawning */
 var brickSpawnVals = {
 	currTime : 0,
 	delay : 7
+}
+
+/* Values to limit checking for completion */
+var checkWinVals = {
+	currTime : 0,
+	delay : 20
 }
 
 /* Texture coordinate raw data */
@@ -333,12 +339,12 @@ function toLevel(_level) {
 	currentLevelGoalArea = 0;  // calculate area of foal boundries
 	for (var i=0; i<levelObject.boundries.length; i++) {
 		addObject(createPyramidShape(
-				levelObject.boundries.x,
-				levelObject.boundries.y,
-				levelObject.boundries.w,
-				levelObject.boundries.h
+				levelObject.boundries[i].x,
+				levelObject.boundries[i].y,
+				levelObject.boundries[i].w,
+				levelObject.boundries[i].h
 			));
-		currentLevelGoalArea += levelObject.boundries.w * levelObject.boundries.h;
+		currentLevelGoalArea += levelObject.boundries[i].w * levelObject.boundries[i].h;
 	}
 	addObject(createDecor(
 			levelObject.overlay.x_pos,
@@ -708,6 +714,8 @@ function addObject(_obj) {
 }
 
 function removeObject(_obj) {
+	if (_obj == undefined || _obj == null)
+		return;
 	if (_obj.type == TYPE_DECOR) {
 		removeFromArray(_obj, decorObjects);
 	} else if (_obj.type == TYPE_PRYAMID_SHAPE) {
@@ -800,7 +808,22 @@ function updateBrick(_brick, _diff) {
 function updateMeteor(_meteor, _diff) {	
 	_meteor.pos[0] += _meteor.vel[0];
 	_meteor.pos[1] += _meteor.vel[1];
+
+	// if a meteor collides with another block...
+	for (var i = 0; i < gameObjects.length; i++) {
+		if (gameObjects[i].type == TYPE_BRICK) {
+			if (objectsAreColliding(_meteor, gameObjects[i])) {
+				// explode it!
+				removeObject(_meteor);
+				removeObject(gameObjects[i]);
+				break;
+			}
+		}
+	}
 	
+	if (_meteor.pos[1] > 650) {
+		removeObject(_meteor);
+	}
 }
 
 function updateStrongMan(_strongMan, _diff) {
@@ -882,30 +905,48 @@ function checkCollision(_obj1, _obj2) {
 		return;
 }
 
-function getCompletedPercentage(_bricks, _goalBounds) {
-	
+function getCompletedPercentage() {
+	var levelObject = levelData.level_goal_boxes[onLevel];
+	var totalIntersectionArea = 0;
+	// levelObject.boundries is the boundries array.
+	// gameObjects of type TYPE_BRICK are the blocks
+	for (var i = 0; i < levelObject.boundries.length; i++) {
+		
+		for (var j = 0; j < gameObjects.length; j++) {
+			
+			if (gameObjects[j].type == TYPE_BRICK) {
+				totalIntersectionArea += intersectArea(gameObjects[j], 
+														levelObject.boundries[i]);
+			}
+		}
+	}
+	console.log("totalIntersectionArea = " + totalIntersectionArea);
+	console.log("currentLevelGoalArea = " + currentLevelGoalArea);
+	return totalIntersectionArea / currentLevelGoalArea;
 }
 
+// let _b have position and size defined in arrays
+// let _g have position and size defined in x, y, w, h variables.
 function intersectArea(_b, _g) {
-	var i_w; // intersect width
-	var i_h; // intersect height
-	if (checkCollision(_b, _g)) {
-		if (_b.pos[0] >= _g.pos[0]) { // x axis
-			i_w = _g.size[0] - (_b.pos[0] - _g.pos[0]);
-		} else {
-			i_w = _b.size[0] - (_g.pos[0] - _b.pos[0])
-		}
-		if (_b.pos[1] >= _g.pos[1]) { // y axis
-			i_h = _g.size[1] - (_b.pos[1] - _g.pos[1]);
-		} else {
-			i_h = _b.size[1] - (_g.pos[1] - _b.pos[0])
-		}
-	} else {  // no intersection
-		i_w = 0; 
-		i_h = 0;
-	}
+	// stack overflow http://stackoverflow.com/questions/4549544/total-area-of-intersecting-rectangles
 	
-	return i_w * i_h;
+	if (!(_b.pos[0] > _g.x +_g.w || 
+           _b.pos[0]+ _b.size[0] < _g.x || 
+           _b.pos[1] > _g.y +_g.h ||
+           _b.pos[1]+_b.size[1] < _g.y)) {  // if colliding
+			var left = Math.max(_b.pos[0], _g.x)
+			var right = Math.min(_b.pos[0] + _b.size[0], _g.x + _g.w)
+			var bottom = Math.min(_b.pos[1] + _b.size[1], _g.y + _g.h)
+			var ttop = Math.max(_b.pos[1], _g.y);
+			
+			var width = right - left;
+			var height = bottom - ttop;
+			
+			return (width * height);
+		   }
+		   
+	return 0;
+
 }
 
 /* MAIN MENU STATE FUNCTIONS */
@@ -939,6 +980,7 @@ function initPlayGame() {
 	clearObjectArrays();
 	curSampler = SAMPLER_TEXTURES;
 	addObject(createBackground(0, 0, 800, 600, "background"));
+	meteorSpawnVals.currTime = 3.0 * meteorSpawnVals.baseTime / 4;
 }
 
 function updatePlayGame(_diff) {
@@ -954,13 +996,33 @@ function updatePlayGame(_diff) {
 		meteorSpawnVals.currTime = 0;
 		// spawn a meteor
 		console.log("** SPAWN A METEOR! **");
-		addObject(createMeteor(Math.random() * 800, -16, 0, 1));
+		var mvelocity = 6.0;
+		var spawnX = (Math.random() * 1000) - 100;
+		var spawnY = -16;
+		var diffX = 400 - spawnX;
+		var diffY = 560 - spawnY;
+		var magn = Math.sqrt((diffX * diffX) + (diffY * diffY));
+		var velX = mvelocity * (diffX / magn);
+		var velY = mvelocity * (diffY / magn);
+		addObject(createMeteor(spawnX, spawnY, velX, velY));
 	} else {
 		// increment time 
 		meteorSpawnVals.currTime = meteorSpawnVals.currTime + _diff;
 	}
 	
 	brickSpawnVals.currTime = brickSpawnVals.currTime + _diff;
+	
+	checkWinVals.currTime = checkWinVals.currTime + _diff;
+	if (checkWinVals.currTime > checkWinVals.delay) {
+		checkWinVals.currTime = 0;
+		var completePercent = getCompletedPercentage();
+		// modify the complete percentage
+		completePercent = completePercent / 0.9;
+		console.log("COMPLETE PERCENTAGE: " + completePercent + "");
+		if (completePercent > 0.7) {
+			advanceStory();
+		}
+	}
 }
 
 function renderPlayGame() {
