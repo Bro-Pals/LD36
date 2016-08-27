@@ -636,7 +636,8 @@ function createBrick(_x, _y) {
 		updateFunc : updateBrick,
 		onDeleteFunc : onDeleteBrick,
 		bufferOffset : objectData.indexBufferOffsetMap["block"],
-		type : TYPE_BRICK
+		type : TYPE_BRICK,
+		isDead : false
 	};
 }
 
@@ -648,7 +649,8 @@ function createMeteor(_x, _y, _velX, _velY) {
 		updateFunc : updateMeteor,
 		onDeleteFunc : onDeleteMeteor,
 		bufferOffset : objectData.indexBufferOffsetMap["meteor"],
-		type : TYPE_METEOR
+		type : TYPE_METEOR,
+		isDead : false
 	};
 }
 
@@ -660,7 +662,8 @@ function createStrongMan(_x) {
 		updateFunc : updateStrongMan,
 		onDeleteFunc : onDeleteStrongMan,
 		bufferOffset : objectData.indexBufferOffsetMap["strongman"],
-		type : TYPE_STRONG_MAN
+		type : TYPE_STRONG_MAN,
+		isDead : false
 	};
 }
 
@@ -672,7 +675,8 @@ function createPyramidShape(_x, _y, _w, _h) {
 		updateFunc : noFunc,
 		onDeleteFunc : noFunc,
 		bufferOffset : null, //Don't draw this
-		type : TYPE_PRYAMID_SHAPE
+		type : TYPE_PRYAMID_SHAPE,
+		isDead : false
 	};
 }
 
@@ -684,7 +688,8 @@ function createDecor(_x, _y, _w, _h, _texture) {
 		updateFunc : noFunc,
 		onDeleteFunc : noFunc,
 		bufferOffset : objectData.indexBufferOffsetMap[_texture],
-		type : TYPE_DECOR
+		type : TYPE_DECOR,
+		isDead : false
 	};
 }
 
@@ -895,7 +900,6 @@ function mousePositionInObject(_obj) {
 }
 
 function checkCollision(_obj1, _obj2) {
-	
         var smallestMaxX = _obj2.pos[0] + _obj2.size[0]
                 < _obj1.pos[0] + _obj1.size[0] ? _obj2.pos[0] + _obj2.size[0]
                         : _obj1.pos[0] + _obj1.size[0];
@@ -1018,8 +1022,12 @@ function initPlayGame() {
 
 function updatePlayGame(_diff) {
 	if (!paused) {
-		for (var i=0; i < gameObjects.length; i++) {
-			gameObjects[i].updateFunc(gameObjects[i], _diff);
+		for (var i=gameObjects.length-1; i >= 0; i--) {
+			if (gameObjects[i].isDead) {
+				splice(i, 1);
+			} else {
+				gameObjects[i].updateFunc(gameObjects[i], _diff);
+			}
 		}
 	}
 	
