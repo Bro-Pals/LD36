@@ -1,0 +1,13 @@
+{
+	slide_coords : [
+		{ 
+			name : "slide1",
+			x : 0,
+			y : 0,
+			image_width: 800,
+			image_height: 600,
+			world_width: 800,
+			world_height: 600
+		}
+	]
+}

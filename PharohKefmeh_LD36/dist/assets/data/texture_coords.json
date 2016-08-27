@@ -1,0 +1,157 @@
+{
+	texture_coords : [
+		{ 
+			name : "background",
+			x : 800,
+			y : 842,
+			image_width: 800,
+			image_height: 600,
+			world_width: 800,
+			world_height: 600
+		},
+		{ 
+			name : "block",
+			x : 0,
+			y : 252,
+			image_width: 128,
+			image_height: 128,
+			world_width: 32,
+			world_height: 32
+		},
+		{ 
+			name : "continueButton",
+			x : 0,
+			y : 592,
+			image_width: 256,
+			image_height: 256,
+			world_width: 256,
+			world_height: 256
+		},
+		{ 
+			name : "end",
+			x : 0,
+			y : 1442,
+			image_width: 800,
+			image_height: 600,
+			world_width: 800,
+			world_height: 600
+		},
+		{ 
+			name : "gameover",
+			x : 800,
+			y : 1442,
+			image_width: 800,
+			image_height: 600,
+			world_width: 800,
+			world_height: 600
+		},
+		{ 
+			name : "godeye",
+			x : 170,
+			y : 242,
+			image_width: 256,
+			image_height: 256,
+			world_width: 256,
+			world_height: 256
+		},
+		{ 
+			name : "menuButton",
+			x : 270,
+			y : 592,
+			image_width: 256,
+			image_height: 128,
+			world_width: 256,
+			world_height: 128
+		},
+		{ 
+			name : "meteor",
+			x : 500,
+			y : 252,
+			image_width: 256,
+			image_height: 256,
+			world_width: 256,
+			world_height: 256
+		},
+		{ 
+			name : "pauseButton",
+			x : 1000,
+			y : 592,
+			image_width: 128,
+			image_height: 128,
+			world_width: 128,
+			world_height: 128
+		},
+		{ 
+			name : "playButton",
+			x : 550,
+			y : 592,
+			image_width: 256,
+			image_height: 128,
+			world_width: 256,
+			world_height: 128
+		},
+		{ 
+			name : "strongman",
+			x : 1300,
+			y : 252,
+			image_width: 64,
+			image_height: 128,
+			world_width: 64,
+			world_height: 128
+		},
+		{ 
+			name : "title",
+			x : 0,
+			y : 842,
+			image_width: 800,
+			image_height: 600,
+			world_width: 800,
+			world_height: 600
+		},
+		{ 
+			name : "resumeButton",
+			x : 1128,
+			y : 592,
+			image_width: 128,
+			image_height: 128,
+			world_width: 128,
+			world_height: 128
+		},
+		{
+			name : "overlay1",
+			x : 1605,
+			y : 842,
+			image_width : 181,
+			image_height : 129,
+			world_width : 181,
+			world_height : 129
+		},
+		{
+			name : "overlay2",
+			x : 1605,
+			y : 975,
+			image_width : 280,
+			image_height : 144,
+			world_width : 280,
+			world_height : 144
+		},
+		{
+			name : "overlay3",
+			x : 1888,
+			y : 844,
+			image_width : 76,
+			image_height : 275,
+			world_width : 76,
+			world_height : 275
+		},
+		{
+			name : "overlay4",
+			x : 1605,
+			y : 1122,
+			image_width : 336,
+			image_height : 250,
+			world_width : 336,
+			world_height : 250
+		}
+	]
+}

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<script src="lib/gamethings.js"></script>
+	<script src="gamecode.js"></script>
+	<script type="x-shader/x-vertex" id="vshader">
+		attribute vec2 vertexPos; //Vertex data
+		attribute vec2 texCoord; //Raw texture coordinate data 
+		varying mediump vec2 varyingTexCoord; 
+		uniform vec2 worldPosition; //Position of object in game world (World coordinates) 
+		uniform vec2 worldSize;
+		uniform vec2 scale;
+		//*The size of the view for world coordinates is the same scale as screen coordinates*
+		
+		void main() {
+			varyingTexCoord = texCoord; //Pass it on to the fragment shader 
+			//World view is always 800x600
+			float halfWidth = worldSize.x/2.0;
+			float halfHeight = worldSize.y/2.0;
+			gl_Position = vec4(
+				//Transform so that the object's top left is their 0,0 and to
+				//account for a different sized canvas
+				(vertexPos.x+worldPosition.x+halfWidth-400.0)/(400.0),
+				-(vertexPos.y+worldPosition.y+halfHeight-300.0)/(300.0),
+				0.0,
+				1.0
+			);
+		}
+		
+	</script>
+	<script type="x-shader/x-fragment" id="fshader">
+		//Need to give a precision if it isn't GL_ES (?)
+
+		varying mediump vec2 varyingTexCoord;
+		uniform sampler2D tex; //Sampler for the texture 
+		
+		void main() {
+			lowp vec4 col = texture2D(tex, varyingTexCoord);//Get the texture
+			if (col.w < 1.0)
+				discard;
+			gl_FragColor = col;
+			//Discard fragment if it is transparent
+		}
+		
+	</script>
+</head>
+<body onload="startGame()">
+	<!--Our game canvas!-->
+	
+	<canvas width="800" height="600" id="gamecanvas" style="
+		margin-left:auto;
+		margin-right:auto;
+		display:block;
+	"></canvas>
+	<table>
+		<tr>
+			<td><a href="small_400x300.html">small (400x300)</a></td>
+			<td><a href="medium-small_600x450.html">medium-small (600x450)</a></td>
+			<td><a href="medium_800x600.html">medium (800x600)</a></td>
+			<td><a href="large_1200x900.html">large (1200x900)</a></td>
+			<td><a href="huge_1600x1200.html">huge (1600x1200)</a></td>
+		</tr>
+	</table>
+	<script>
+		function startGame() {
+			GameManager.createState(
+				"mainMenu",
+				initMainMenu,
+				noFunc,
+				drawObjectArrays,
+					{
+					mouse : mouseMainMenu,
+					}
+				);
+			GameManager.createState(
+				"storyBoard",
+				initStoryBoard,
+				noFunc,
+				drawObjectArrays,
+					{
+					mouse : mouseStoryBoard,
+					}
+				);
+			GameManager.createState(
+				"playGame",
+				initPlayGame,
+				updatePlayGame,
+				renderPlayGame,
+					{
+					mouse : mousePlayGame,
+					mouseMove : mouseMovePlayGame
+					}
+				);
+			GameManager.setCanvas("gamecanvas", "webgl");
+			//Throw in some music
+			var music = document.getElementById("music");
+			music.addEventListener('ended', function() {
+				music.currentTime = 0;
+				music.play();
+			}, false);
+			music.play();
+			initSound();
+			initObjectDatas();
+			initWebGLParts();
+			GameManager.setState("mainMenu");
+			GameManager.loop();
+		}
+	</script>
+	<!--Texture images-->
+	<img src="assets/img/textures.png" style="display:none;" id="texturesImage"></img>
+	<img src="assets/img/slides.png" style="display:none;" id="slidesImage"></img>
+	<audio src="assets/music/songv1.ogg" id="music"></audio>
+	<audio src="assets/sound/brickfall.ogg" id="brickfall"></audio>
+	<audio src="assets/sound/pop.ogg" id="pop"></audio>
+</body>
+</html>
