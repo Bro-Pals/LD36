@@ -31,6 +31,9 @@ var SAMPLER_SLIDES = 1;
 var curSampler = 0;
 
 
+/* Gravity constant */
+var GRAVITY_VELOCITY = 5.0;
+
 /* Texture coordinate raw data */
 var objectTexCoordData = {
 	texture_coords : [
@@ -555,7 +558,7 @@ function createBrick(_x, _y) {
 	return {
 		pos : [ _x, _y ],
 		size : [ 64, 64 ],
-		vel : [ 0, 5 ], //Small downward velocity
+		vel : [ 0, GRAVITY_VELOCITY ], //Small downward velocity
 		updateFunc : updateBrick,
 		onDeleteFunc : onDeleteBrick,
 		bufferOffset : objectData.indexBufferOffsetMap["block"],
@@ -567,7 +570,7 @@ function createMeteor(_x, _y, _velX, _velY) {
 	return {
 		pos : [ _x, _y ],
 		size : [ 64, 64 ],
-		vel : [ velX, velY ], //Small downward velocity
+		vel : [ velX, velY ], // function set velocity
 		updateFunc : updateMeteor,
 		onDeleteFunc : onDeleteMeteor,
 		bufferOffset : objectData.indexBufferOffsetMap["meteor"],
@@ -719,11 +722,29 @@ function drawHoverBrick() {
 /* Specific per-type functions */
 
 function updateBrick(_brick) {
+	// update brick position
+	_brick.pos[0] += _brick.vel[0];
+	_brick.pos[1] += _brick.vel[1];
 	
+	// check collisions.
+	for (var i = 0; i < bricks.length; i++) {
+		if (checkCollision(_brick, bricks[i]) {
+			// if this brick is colliding into the top of the other.
+			// (in our system, blocks can never move up.)
+			if (_brick.pos[1] + _brick.size[1] > bricks[i].pos[1]) {
+				_brick.pos[1] = bricks[i].pos[1] - _brick.size[1];
+			}
+			// TODO: Put in the x axis collsioons tuff.
+		}
+		
+	}
 }
 
 function updateMeteor(_meteor) {
+	// update the meteor size
 	
+	_meteor.pos[0] += _meteor.vel[0];
+	_meteor.pos[1] += _meteor.vel[1];
 }
 
 function updateStrongMan(_strongMan) {
@@ -745,7 +766,38 @@ function onDeleteStrongMan(_strongMan) {
 }
 
 function checkCollision(_obj1, _obj2) {
+	return(_obj1.pos[0] < _obj2.pos[0] + _obj2.size[0] &&
+		_obj1.pos[0] + _obj1.size[0] > _obj2.pos[0] &&
+		_obj1.pos[1] < _obj2.pos[1] + _obj2.size[1] &&
+		_obj1.size[1] + _obj1.pos[1] > _obj2.pos[1]);
+}
+
+function getCompletedPercentage(_bricks, _goalBounds) {
 	
+	
+	
+}
+
+function intersectArea(_b, _g) {
+	float i_w; // intersect width
+	float i_h; // intersect height
+	if (checkCollision(_b, _g) {
+		if (_b.pos[0] >= _g.pos[0]) { // x axis
+			i_w = _g.size[0] - (_b.pos[0] - _g.pos[0]);
+		} else {
+			i_w = _b.size[0] - (_g.pos[0] - _b.pos[0])
+		}
+		if (_b.pos[1] >= _g.pos[1]) { // y axis
+			i_h = _g.size[1] - (_b.pos[1] - _g.pos[1]);
+		} else {
+			i_h = _b.size[1] - (_g.pos[1] - _b.pos[0])
+		}
+	} else {  // no intersection
+		i_w = 0; 
+		i_h = 0;
+	}
+	
+	return i_w * i_h;
 }
 
 /* MAIN MENU STATE FUNCTIONS */
