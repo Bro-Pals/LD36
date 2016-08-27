@@ -761,15 +761,22 @@ function drawHoverBrick() {
 
 /* Specific per-type functions */
 
-function updateBrick(_brick) {
+function updateBrick(_brick, _diff) {
+	_brick.pos[1] += 4.0;
+	//Check to see if it will collide with something, and if
+	//it does, then stop it from moving 
+	doCollisionChecking(_brick);
+	//Make sure it doesn't fall through the floor
+	if (_brick.pos[1] > 560.0-_brick.size[1]) {
+		_brick.pos[1] = 560-_brick.size[1];
+	}
+}
+
+function updateMeteor(_meteor, _diff) {
 	
 }
 
-function updateMeteor(_meteor) {
-	
-}
-
-function updateStrongMan(_strongMan) {
+function updateStrongMan(_strongMan, _diff) {
 	
 }
 
@@ -785,6 +792,23 @@ function onDeleteMeteor(_meteor) {
 
 function onDeleteStrongMan(_strongMan) {
 	
+}
+
+function doCollisionChecking(_obj) {
+	for (var i=0; i< gameObjects.length; i++) {
+		if (gameObjects[i] != _obj) {
+			checkCollision(_obj, gameObjects[i]);
+		}
+	}
+}
+
+//Thanks Stack Overflow!
+//http://stackoverflow.com/questions/2752349/fast-rectangle-to-rectangle-intersection
+function objectsAreColliding(_obj1, _obj2) [
+	return !(_obj1.pos[0] > _obj2.pos[0]+_obj2.size[0] || 
+           _obj1.pos[0]+_obj1.size[0] < _obj2.pos[0] || 
+           _obj1.pos[1] > _obj2.pos[1]+_obj2.size[1] ||
+           _obj1.pos[1]+_obj1.size[1] < _obj2.pos[1]);
 }
 
 function checkCollision(_obj1, _obj2) {
@@ -825,7 +849,9 @@ function initPlayGame() {
 }
 
 function updatePlayGame(_diff) {
-	
+	for (var i=0; i < gameObjects.length; i++) {
+		gameObjects[i].updateFunc(gameObjects[i], _diff);
+	}
 }
 
 function renderPlayGame() {
@@ -834,7 +860,12 @@ function renderPlayGame() {
 }
 
 function mousePlayGame(_pressed, _x, _y) {
-	
+	if (_pressed) {
+		addObject(createBrick(
+			(mousePos[0]*800.0/GameManager.getCanvasWidth())-32, 
+			(mousePos[1]*600.0/GameManager.getCanvasHeight())-32
+		));
+	}
 }
 
 function mouseMovePlayGame(_x, _y) {
