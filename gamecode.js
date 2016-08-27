@@ -722,6 +722,7 @@ function addObject(_obj) {
 function removeObject(_obj) {
 	if (_obj == undefined || _obj == null)
 		return;
+	_obj.isDead = true;
 	if (_obj.type == TYPE_DECOR) {
 		removeFromArray(_obj, decorObjects);
 	} else if (_obj.type == TYPE_PRYAMID_SHAPE) {
@@ -731,6 +732,7 @@ function removeObject(_obj) {
 	} else {
 		removeFromArray(_obj, gameObjects);
 		_obj.onDeleteFunc(_obj);
+		_obj.isDead = true;
 	}
 }
 
@@ -1003,10 +1005,14 @@ function initPlayGame() {
 function updatePlayGame(_diff) {
 	if (!paused) {
 		for (var i=gameObjects.length-1; i >= 0; i--) {
-			if (gameObjects[i].isDead) {
-				splice(i, 1);
+			if (gameObjects[i] == undefined) {
+				console.log("" + i + " is undefined");
 			} else {
-				gameObjects[i].updateFunc(gameObjects[i], _diff);
+				if (gameObjects[i].isDead) {
+					splice(i, 1);
+				} else {
+					gameObjects[i].updateFunc(gameObjects[i], _diff);
+				}
 			}
 		}
 	}
