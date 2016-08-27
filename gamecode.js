@@ -34,6 +34,22 @@ var curSampler = 0;
 /* Gravity constant */
 var GRAVITY_VELOCITY = 5.0;
 
+/* Area of the goal boundries. */
+var currentLevelGoalArea;
+
+/* Values related to meteor spawning */
+var meteorSpawnVals = {
+	currTime : 0,  // current time for next meteor
+	timeDecreasePerLevel : 15, //75,  // time decrease for each level
+	baseTime : 100 //450    // base time between meteors
+};
+
+/* Values related to brick spawning */
+var brickSpawnVals = {
+	currTime : 0,
+	delay : 7
+}
+
 /* Texture coordinate raw data */
 var objectTexCoordData = {
 	texture_coords : [
@@ -106,8 +122,8 @@ var objectTexCoordData = {
 			y : 252,
 			image_width: 256,
 			image_height: 256,
-			world_width: 256,
-			world_height: 256
+			world_width: 64,
+			world_height: 64
 		},
 		{ 
 			name : "pauseButton",
@@ -314,6 +330,7 @@ function toLevel(_level) {
 	GameManager.setState("playGame");
 	//Build the level
 	var levelObject = levelData.level_goal_boxes[onLevel];
+	currentLevelGoalArea = 0;  // calculate area of foal boundries
 	for (var i=0; i<levelObject.boundries.length; i++) {
 		addObject(createPyramidShape(
 				levelObject.boundries.x,
@@ -321,6 +338,7 @@ function toLevel(_level) {
 				levelObject.boundries.w,
 				levelObject.boundries.h
 			));
+		currentLevelGoalArea += levelObject.boundries.w * levelObject.boundries.h;
 	}
 	addObject(createDecor(
 			levelObject.overlay.x_pos,
@@ -329,6 +347,7 @@ function toLevel(_level) {
 			objectData.sizesMap[levelObject.overlay.name][1],
 			levelObject.overlay.name
 		));
+	
 	console.log("Level " + _level);
 }
 
@@ -614,7 +633,7 @@ function createMeteor(_x, _y, _velX, _velY) {
 	return {
 		pos : [ _x, _y ],
 		size : [ 64, 64 ],
-		vel : [ velX, velY ], // function set velocity
+		vel : [ _velX, _velY ], // function set velocity
 		updateFunc : updateMeteor,
 		onDeleteFunc : onDeleteMeteor,
 		bufferOffset : objectData.indexBufferOffsetMap["meteor"],
@@ -780,6 +799,7 @@ function updateBrick(_brick, _diff) {
 function updateMeteor(_meteor, _diff) {	
 	_meteor.pos[0] += _meteor.vel[0];
 	_meteor.pos[1] += _meteor.vel[1];
+	
 }
 
 function updateStrongMan(_strongMan, _diff) {
@@ -884,6 +904,22 @@ function updatePlayGame(_diff) {
 	for (var i=0; i < gameObjects.length; i++) {
 		gameObjects[i].updateFunc(gameObjects[i], _diff);
 	}
+	
+	// Update the meteor spawning.
+	var spawnTime = meteorSpawnVals.baseTime - meteorSpawnVals.timeDecreasePerLevel;
+	//console.log("meteorSpawnVals.currTime = " + (meteorSpawnVals.currTime));
+	//console.log("spawnTime = " + (spawnTime));
+	if (meteorSpawnVals.currTime > spawnTime) {
+		meteorSpawnVals.currTime = 0;
+		// spawn a meteor
+		console.log("** SPAWN A METEOR! **");
+		addObject(createMeteor(Math.random() * 800, -16, 0, 1));
+	} else {
+		// increment time 
+		meteorSpawnVals.currTime = meteorSpawnVals.currTime + _diff;
+	}
+	
+	brickSpawnVals.currTime = brickSpawnVals.currTime + _diff;
 }
 
 function renderPlayGame() {
@@ -892,11 +928,12 @@ function renderPlayGame() {
 }
 
 function mousePlayGame(_pressed, _x, _y) {
-	if (_pressed) {
+	if (_pressed && (brickSpawnVals.currTime > brickSpawnVals.delay)) {
 		addObject(createBrick(
 			(mousePos[0]*800.0/GameManager.getCanvasWidth())-32, 
 			(mousePos[1]*600.0/GameManager.getCanvasHeight())-32
 		));
+		brickSpawnVals.currTime = 0;
 	}
 }
 
