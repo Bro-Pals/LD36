@@ -9,13 +9,25 @@ var TYPE_STRONG_MAN = 2; //Walk towards the pyramid and punch blocks
 var TYPE_PRYAMID_SHAPE = 3; //Defines the pyramid shape (separate array)
 var TYPE_DECOR = 4; //No collision and is drawn in the background (separate array)
 
+/* WebGL variables */
 var arrayBufferName = 0;
 var indexArrayBufferName = 0;
-var program;
+var objectProgram; //Program for drawing game objects on the screen
+var objectProgramLocs = {
+	vertexPos : null, //(vec2 attribute)
+	texCoord : null, //(vec2 attribute)
+	worldPosition : null, //(vec2 uniform)
+	worldSize : null, //(vec2 uniform)
+	screenSize : null,
+	depthValue : null,
+	tex : null
+};
+var texturesTex; //Texture object for textures 
+var slidesTex; //Texture object for slides 
+var SAMPLER_TEXTURES = 0;
+var SAMPLER_SLIDES = 1;
+var curSampler = 0;
 
-var onStory = 0;
-var onLevel = 0;
-var progressionPointer = 0;
 
 /* Texture coordinate raw data */
 var objectTexCoordData = {
@@ -104,11 +116,13 @@ var objectTexCoordData = {
 			width: 800,
 			height: 600
 		}
-	]
+	],
+	imageWidth : 2048.0,
+	imageHeight: 2048.0
 };
 
 var slideTexCoordData = {
-	slide_coords : [
+	texture_coords : [
 		{ 
 			name : "slide1",
 			x : 0,
@@ -116,14 +130,30 @@ var slideTexCoordData = {
 			width: 800,
 			height: 600
 		}
-	]
+	],
+	imageWidth : 2048.0,
+	imageHeight: 2048.0
 };
 
 /* Container objects */
 var storyBoardPictures =  [ ];
 var levelParams = [ ];
+var objectData = { 
+	namesArray : [ ], //List of names 
+	indexBufferOffsetMap : [ ], //names mapped to offsets
+	textureCoordsMap : [ ], //names mapped to texture coordinates
+};
+var slidesData = { 
+	namesArray : [ ], //List of names 
+	indexBufferOffsetMap : [ ], //names mapped to offsets
+	textureCoordsMap : [ ], //names mapped to texture coordinates
+};
 
 /* PROGRESSION FUNCTIONS AND VARIABLES */
+
+var onStory = 0;
+var onLevel = 0;
+var progressionPointer = 0;
 
 //The progression array will determine when it will be a story or
 //a level screen. The progression array will be an array of functions.
@@ -156,14 +186,213 @@ function advanceStory() {
 /* PLAY GAME FUNCTIONALITY FUNCTIONS */
 
 /* Objects to render on the screen */
-var gameObjects = new Array();
-var pyramidShapeObjects = new Array();
-var decorObjects = new Array();
+var gameObjects = [ ];
+var pyramidShapeObjects = [ ];
+var decorObjects = [ ];
 
+//Init WebGL variables that will be around for the whole game 
 function initWebGLParts() {
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
-	program = makeProgramWithShaderIds("vshader", "fshader");
+	/* Load programs and get shader attribute and uniform locations */
+	objectProgram = makeProgramWithShaderIds("vshader", "fshader");
+	objectProgramLocs.vertexPos = gl.getAttribLocation(objectProgram, "vertexPos");
+	objectProgramLocs.texCoord = gl.getAttribLocation(objectProgram, "texCoord");
+	objectProgramLocs.worldPosition = gl.getUniformLocation(objectProgram, "worldPosition");
+	objectProgramLocs.worldSize = gl.getUniformLocation(objectProgram, "worldSize");
+	objectProgramLocs.screenSize = gl.getUniformLocation(objectProgram, "screenSize");
+	objectProgramLocs.depthValue = gl.getUniformLocation(objectProgram, "depthValue");
+	objectProgramLocs.tex = gl.getUniformLocation(objectProgram, "tex");
 	
+	/* Create the array and index array buffers */
+	var arrayArray = new Float32Array((objectData.namesArray.length+slidesData.namesArray.length)*16);
+	var indexArray = new Uint16Array((objectData.namesArray.length+slidesData.namesArray.length)*6);
+	//Fill the arrays with object data
+	for (var i=0; i < objectData.namesArray.length; i++) {
+		var onName = objectData.namesArray[i];
+		//Array buffer setting
+		arrayArray[(i*16)+0] = -0.5;
+		arrayArray[(i*16)+1] = -0.5;
+		arrayArray[(i*16)+2] = objectData.textureCoordsMap[onName][0];
+		arrayArray[(i*16)+3] = objectData.textureCoordsMap[onName][1];
+	
+		arrayArray[(i*16)+4] = -0.5;
+		arrayArray[(i*16)+5] = 0.5;
+		arrayArray[(i*16)+6] = objectData.textureCoordsMap[onName][2];
+		arrayArray[(i*16)+7] = objectData.textureCoordsMap[onName][3];
+		
+		arrayArray[(i*16)+8] = 0.5;
+		arrayArray[(i*16)+9] = 0.5;
+		arrayArray[(i*16)+10] = objectData.textureCoordsMap[onName][4];
+		arrayArray[(i*16)+11] = objectData.textureCoordsMap[onName][5];
+		
+		arrayArray[(i*16)+12] = 0.5;
+		arrayArray[(i*16)+13] = -0.5;
+		arrayArray[(i*16)+14] = objectData.textureCoordsMap[onName][6];
+		arrayArray[(i*16)+15] = objectData.textureCoordsMap[onName][7];
+	
+		//Index array buffer setting
+		indexArray[(i*6)+0] = (i*4)+0;
+		indexArray[(i*6)+1] = (i*4)+1;
+		indexArray[(i*6)+2] = (i*4)+2;
+		indexArray[(i*6)+3] = (i*4)+0;
+		indexArray[(i*6)+4] = (i*4)+3;
+		indexArray[(i*6)+5] = (i*4)+2;
+	}
+	var slidesArrayStart = i*16; 
+	var slidesIndexStart = i*6;
+	var slidesIndexArrayStart = i*4;
+	
+	//Fill the arrays with slides data 
+	for (var i=0; i < slidesData.namesArray.length; i++) {
+		var onName = slidesData.namesArray[i];
+		//Array buffer setting
+		arrayArray[slidesArrayStart+(i*16)+0] = -0.5;
+		arrayArray[slidesArrayStart+(i*16)+1] = -0.5;
+		arrayArray[slidesArrayStart+(i*16)+2] = slidesData.textureCoordsMap[onName][0];
+		arrayArray[slidesArrayStart+(i*16)+3] = slidesData.textureCoordsMap[onName][1];
+	
+		arrayArray[slidesArrayStart+(i*16)+4] = -0.5;
+		arrayArray[slidesArrayStart+(i*16)+5] = 0.5;
+		arrayArray[slidesArrayStart+(i*16)+6] = slidesData.textureCoordsMap[onName][2];
+		arrayArray[slidesArrayStart+(i*16)+7] = slidesData.textureCoordsMap[onName][3];
+		
+		arrayArray[slidesArrayStart+(i*16)+8] = 0.5;
+		arrayArray[slidesArrayStart+(i*16)+9] = 0.5;
+		arrayArray[slidesArrayStart+(i*16)+10] = slidesData.textureCoordsMap[onName][4];
+		arrayArray[slidesArrayStart+(i*16)+11] = slidesData.textureCoordsMap[onName][5];
+		
+		arrayArray[slidesArrayStart+(i*16)+12] = 0.5;
+		arrayArray[slidesArrayStart+(i*16)+13] = -0.5;
+		arrayArray[slidesArrayStart+(i*16)+14] = slidesData.textureCoordsMap[onName][6];
+		arrayArray[slidesArrayStart+(i*16)+15] = slidesData.textureCoordsMap[onName][7];
+	
+		//Index array buffer setting
+		indexArray[slidesIndexStart+(i*6)+0] = slidesIndexArrayStart+(i*4)+0;
+		indexArray[slidesIndexStart+(i*6)+1] = slidesIndexArrayStart+(i*4)+1;
+		indexArray[slidesIndexStart+(i*6)+2] = slidesIndexArrayStart+(i*4)+2;
+		indexArray[slidesIndexStart+(i*6)+3] = slidesIndexArrayStart+(i*4)+0;
+		indexArray[slidesIndexStart+(i*6)+4] = slidesIndexArrayStart+(i*4)+3;
+		indexArray[slidesIndexStart+(i*6)+5] = slidesIndexArrayStart+(i*4)+2;
+	}
+	
+	arrayBufferName = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, arrayBufferName);
+	gl.bufferData(gl.ARRAY_BUFFER, arrayArray, gl.STATIC_DRAW);
+	
+	indexArrayBufferName = gl.createBuffer();
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexArrayBufferName);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexArray, gl.STATIC_DRAW);
+	
+	/* Load textures and set their parameters */
+	var texturesImage = document.getElementById("texturesImage");
+	gl.activeTexture(gl.TEXTURE0);
+	texturesTex = gl.createTexture();
+	gl.bindTexture(gl.TEXTURE_2D, texturesTex);
+	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, 
+		texturesImage);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+	/* 
+	If gl.NEAREST looks bad then use gl.LINEAR
+	*/
+	/*
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+	*/
+	
+	var slidesImage = document.getElementById("slidesImage");
+	gl.activeTexture(gl.TEXTURE1);
+	slidesTex = gl.createTexture();
+	gl.bindTexture(gl.TEXTURE_2D, slidesTex);
+	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, 
+		slidesImage);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+	/* 
+	If gl.NEAREST looks bad then use gl.LINEAR
+	*/
+	/*
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+	*/
+}
+
+/*
+	Used to fill the objectData and slideData object arrays with
+	information derived from objectTexCoordData and slideTexCoordData
+	
+	Texture coords and verticies are in the order:
+	   1        4
+		*------*
+		|      |
+		|      |        (counter-clockwise)
+		|      |
+		*------*
+       2        3
+*/
+function initObjectData(_dataObject, _rawObject) {
+	var i;
+	var theName = null;
+	var theWidth = null;
+	var theHeight = null;
+	var theX = null;
+	var theY = null;
+	/*
+	console.log("Image width: " + _rawObject.imageWidth);
+	console.log("Image height: " + _rawObject.imageHeight);
+	*/
+	for (i = 0; i < _rawObject.texture_coords.length; i++) {
+		theName = _rawObject.texture_coords[i].name;
+		theWidth = _rawObject.texture_coords[i].width;
+		theHeight = _rawObject.texture_coords[i].height;
+		theX = _rawObject.texture_coords[i].x;
+		theY = _rawObject.texture_coords[i].y;
+		
+		/*
+		console.log("Got values { ");
+		console.log("     name : " + theName);
+		console.log("     x : " + theX);
+		console.log("     y : " + theY);
+		console.log("     width : " + theWidth);
+		console.log("     height : " + theHeight);
+		console.log("}");
+		*/
+		
+		//Push name into names array 
+		_dataObject.namesArray.push(theName);
+		//Calculare the texture coordinates on [0.0, 1.0] with the 
+		//image coordinate information (x, y) and (width, height)
+		_dataObject.textureCoordsMap[theName] = [
+			theX/_rawObject.imageWidth, theY/_rawObject.imageHeight,
+			theX/_rawObject.imageWidth, (theY+theHeight)/_rawObject.imageHeight,
+			(theX+theWidth)/_rawObject.imageWidth, (theY+theHeight)/_rawObject.imageHeight,
+			(theX+theWidth)/_rawObject.imageWidth, theY/_rawObject.imageHeight,
+		];
+		//Calculate the byte offset to get to the first index in
+		//the (not yet created) index array.
+		//6 indicies per 4 texture coordinates (4 verticies per shape).
+		//Using a Uint8Array to store indicies (gl.UNSIGNED_INT)
+		_dataObject.indexBufferOffsetMap[theName] = 6 * i * Uint16Array.BYTES_PER_ELEMENT;
+	}
+	
+	/*
+	Print texture coordinates 
+	
+	for (i=0; i < _dataObject.namesArray.length; i++) {
+		theName = _dataObject.namesArray[i];
+		console.log("Texture coordinates for " +  theName);
+		console.log(_dataObject.textureCoordsMap[theName][0] + ", " + _dataObject.textureCoordsMap[theName][1]);
+		console.log(_dataObject.textureCoordsMap[theName][2] + ", " + _dataObject.textureCoordsMap[theName][3]);
+		console.log(_dataObject.textureCoordsMap[theName][4] + ", " + _dataObject.textureCoordsMap[theName][5]);
+		console.log(_dataObject.textureCoordsMap[theName][6] + ", " + _dataObject.textureCoordsMap[theName][7]);
+		console.log("");
+	}
+	*/
+}
+
+function initObjectDatas() {
+	initObjectData(objectData, objectTexCoordData);
+	initObjectData(slidesData, slideTexCoordData);
 }
 
 /* 
@@ -186,7 +415,7 @@ function createBrick(_x, _y) {
 		vel : [ 0, 5 ], //Small downward velocity
 		updateFunc : updateBrick,
 		onDeleteFunc : onDeleteBrick,
-		bufferOffset : 0, //TBA
+		bufferOffset : objectData.indexBufferOffsetMap["block"],
 		type : TYPE_BRICK
 	};
 }
@@ -198,7 +427,7 @@ function createMeteor(_x, _y, _velX, _velY) {
 		vel : [ velX, velY ], //Small downward velocity
 		updateFunc : updateMeteor,
 		onDeleteFunc : onDeleteMeteor,
-		bufferOffset : 0, //TBA
+		bufferOffset : objectData.indexBufferOffsetMap["meteor"],
 		type : TYPE_METEOR
 	};
 }
@@ -210,7 +439,7 @@ function createStrongMan(_x) {
 		vel : [ 0, 0 ], //Velocity set in updateStrongMan
 		updateFunc : updateStrongMan,
 		onDeleteFunc : onDeleteStrongMan,
-		bufferOffset : 0, //TBA
+		bufferOffset : objectData.indexBufferOffsetMap["strongman"],
 		type : TYPE_STRONG_MAN
 	};
 }
@@ -222,7 +451,7 @@ function createPyramidShape(_x, _y, _w, _h) {
 		vel : [ 0, 0 ],
 		updateFunc : noFunc,
 		onDeleteFunc : noFunc,
-		bufferOffset : 0, //TBA
+		bufferOffset : null, //Don't draw this
 		type : TYPE_PRYAMID_SHAPE
 	};
 }
@@ -234,9 +463,15 @@ function createDecor(_x, _y, _w, _h, _texture) {
 		vel : [ 0, 0 ],
 		updateFunc : noFunc,
 		onDeleteFunc : noFunc,
-		bufferOffset : 0, //TBA
+		bufferOffset : objectData.indexBufferOffsetMap[_texture],
 		type : TYPE_DECOR
 	};
+}
+
+function clearObjectArrays() {
+	gameObjects.length = 0;
+	decorObjects.length = 0;
+	pyramidShapeObjects.length = 0;
 }
 
 function removeFromArray(_obj, arr) {
@@ -260,6 +495,36 @@ function removeObject(_obj) {
 		removeFromArray(_obj, pyramidShapeObjects);
 	} else {
 		removeFromArray(_obj, gameObjects);
+	}
+}
+
+function drawObject(_obj) {
+	console.log("Drawing:\nx " + _obj.pos[0] + "\ny " + _obj.pos[1] + "\nwidth " + _obj.size[0] + "\nheight " + _obj.size[1] + "\noffset " + _obj.bufferOffst);
+	gl.uniform2f(objectProgramLocs.worldPosition, _obj.pos[0], _obj.pos[1]);
+	gl.uniform2f(objectProgramLocs.worldSize, _obj.size[0], _obj.size[1]);
+	gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, _obj.bufferOffset);
+}
+
+/* Draw all of the objects in all of the arrays */
+function drawObjectArrays() {
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	gl.useProgram(objectProgram);
+	gl.uniform1i(objectProgramLocs.tex, curSampler);
+	gl.uniform2f(objectProgramLocs.screenSize, GameManager.getCanvasWidth(), GameManager.getCanvasHeight());
+	var i; //iterator
+	if (gameObjects.length != 0) {
+		//Regular objects are out in the foreground
+		gl.uniform1f(objectProgramLocs.depthValue, 0.0);
+		for (i=0; i<gameObjects.length; i++) {
+			drawObject(gameObjects[i]);
+		}
+	}
+	if (decorObjects.length != 0) {
+		//Decorations are in the background
+		gl.uniform1f(objectProgramLocs.depthValue, 0.2);
+		for (i=0; i<decorObjects.length; i++) {
+			drawObject(decorObjects[i]);		
+		}
 	}
 }
 
@@ -301,7 +566,9 @@ function checkCollision(_obj1, _obj2) {
 /* MAIN MENU STATE FUNCTIONS */
 
 function initMainMenu() {
-	
+	clearObjectArrays();
+	curSampler = SAMPLER_TEXTURES;
+	addObject(createDecor(0, 0, 800, 600, "title"));
 }
 
 function updateMainMenu(_diff) {
@@ -309,11 +576,7 @@ function updateMainMenu(_diff) {
 }
 
 function renderMainMenu(_diff) {
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-}
-
-function keyMainMenu(_pressed, _code) {
-	
+	drawObjectArrays();
 }
 
 function mouseMainMenu(_pressed, _x, _y) {
@@ -322,14 +585,11 @@ function mouseMainMenu(_pressed, _x, _y) {
 	}
 }
 
-function mouseMoveMainMenu(_x, _y) {
-	
-}
-
 /* STORY BOARD STATE FUNCTIONS */
 
 function initStoryBoard() {
-	
+	clearObjectArrays();
+	curSampler = SAMPLER_SLIDES;
 }
 
 function updateStoryBoard(_diff) {
@@ -340,22 +600,15 @@ function renderStoryBoard(_diff) {
 	
 }
 
-function keyStoryBoard(_pressed, _code) {
-	
-}
-
 function mouseStoryBoard(_pressed, _x, _y) {
-	
-}
-
-function mouseMoveStoryBoard(_x, _y) {
 	
 }
 
 /* PLAYING THE GAME STATE FUNCTIONS */
 
 function initPlayGame() {
-	
+	clearObjectArrays();
+	curSampler = SAMPLER_TEXTURES;
 }
 
 function updatePlayGame(_diff) {
@@ -363,10 +616,6 @@ function updatePlayGame(_diff) {
 }
 
 function renderPlayGame(_diff) {
-	
-}
-
-function keyPlayGame(_pressed, _code) {
 	
 }
 
