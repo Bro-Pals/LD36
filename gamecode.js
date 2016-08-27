@@ -131,8 +131,8 @@ var objectTexCoordData = {
 			y : 592,
 			image_width: 128,
 			image_height: 128,
-			world_width: 128,
-			world_height: 128
+			world_width: 64,
+			world_height: 64
 		},
 		{ 
 			name : "playButton",
@@ -167,8 +167,8 @@ var objectTexCoordData = {
 			y : 592,
 			image_width: 128,
 			image_height: 128,
-			world_width: 128,
-			world_height: 128
+			world_width: 64,
+			world_height: 64
 		},
 		{
 			name : "overlay1",
@@ -380,6 +380,7 @@ var gameObjects = [ ];
 var pyramidShapeObjects = [ ];
 var decorObjects = [ ];
 var backgroundObjects = [ ];
+var guiObjects;
 var mousePos = [ 0.0, 0.0 ];
 
 //Init WebGL variables that will be around for the whole game 
@@ -823,7 +824,9 @@ function onDeleteStrongMan(_strongMan) {
 function doCollisionChecking(_obj) {
 	for (var i=0; i< gameObjects.length; i++) {
 		if (gameObjects[i] != _obj) {
-			checkCollision(_obj, gameObjects[i]);
+			if (objectsAreColliding(_obj, gameObjects[i])) {
+				checkCollision(_obj, gameObjects[i]);
+			}
 		}
 	}
 }
@@ -839,6 +842,44 @@ function objectsAreColliding(_obj1, _obj2) {
 
 function checkCollision(_obj1, _obj2) {
 	
+        var smallestMaxX = _obj2.pos[0] + _obj2.size[0]
+                < _obj1.pos[0] + _obj1.size[0] ? _obj2.pos[0] + _obj2.size[0]
+                        : _obj1.pos[0] + _obj1.size[0];
+        var largestMinX = _obj2.pos[0] > _obj1.pos[0] ? _obj2.pos[0] : _obj1.pos[0];
+
+        var smallestMaxY = _obj2.pos[1] + _obj2.size[1]
+                < _obj1.pos[1] + _obj1.size[1] ? _obj2.pos[1] + _obj2.size[1]
+                        : _obj1.pos[1] + _obj1.size[1];
+        var largestMinY = _obj2.pos[1] > _obj1.pos[1] ? _obj2.pos[1] : _obj1.pos[1];
+
+        var penX = largestMinX - smallestMaxX;
+        var penY = largestMinY - smallestMaxY;
+
+        if (penX < 0 && penY < 0) {
+			// only fix the collision if you can collide with the other block
+			if (penY > penX) { // if y is closer to 0 than x is
+				if (_obj1.pos[1] < _obj2.pos[1]) {
+					_obj1.pos[1] = _obj2.pos[1] - _obj1.size[1];
+				} else {
+					_obj1.pos[1] = _obj2.pos[1] + _obj2.size[1];
+				}
+				_obj1.vel[1] = 0;
+			} else {
+				if (_obj1.pos[0] < _obj2.pos[0]) {
+					_obj1.vel[0] = _obj2.pos[0] - _obj1.size[0];
+				} else {
+					_obj1.vel[0] = _obj2.pos[0] + _obj2.size[0];
+				}
+				_obj1.vel[0] = 0;
+            }
+            //Do the things that happens when they collide 
+			//with each other here
+			
+            return;
+        }
+		//No collision happened
+		
+		return;
 }
 
 function getCompletedPercentage(_bricks, _goalBounds) {
@@ -929,11 +970,23 @@ function renderPlayGame() {
 
 function mousePlayGame(_pressed, _x, _y) {
 	if (_pressed && (brickSpawnVals.currTime > brickSpawnVals.delay)) {
-		addObject(createBrick(
+		brickSpawnVals.currTime = 0;
+		var blockToAdd = createBrick(
 			(mousePos[0]*800.0/GameManager.getCanvasWidth())-32, 
 			(mousePos[1]*600.0/GameManager.getCanvasHeight())-32
-		));
-		brickSpawnVals.currTime = 0;
+		);
+		var canAdd = true;
+		//Check to see if you can add it 
+		for (var i=0; i<gameObjects.length; i++) {
+			if (objectsAreColliding(blockToAdd, gameObjects[i])) {
+				canAdd = false;
+				break;
+			}
+		}
+		if (canAdd) {
+			//Passed through without intersecting any block
+			addObject(blockToAdd);
+		}
 	}
 }
 
