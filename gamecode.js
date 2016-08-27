@@ -22,7 +22,6 @@ var objectProgramLocs = {
 	texCoord : null, //(vec2 attribute)
 	worldPosition : null, //(vec2 uniform)
 	worldSize : null, //(vec2 uniform)
-	screenSize : null,
 	tex : null
 };
 var texturesTex; //Texture object for textures 
@@ -325,7 +324,6 @@ function initWebGLParts() {
 	objectProgramLocs.texCoord = gl.getAttribLocation(objectProgram, "texCoord");
 	objectProgramLocs.worldPosition = gl.getUniformLocation(objectProgram, "worldPosition");
 	objectProgramLocs.worldSize = gl.getUniformLocation(objectProgram, "worldSize");
-	objectProgramLocs.screenSize = gl.getUniformLocation(objectProgram, "screenSize");
 	objectProgramLocs.tex = gl.getUniformLocation(objectProgram, "tex");
 	
 	/* Create the array and index array buffers */
@@ -646,7 +644,7 @@ function removeObject(_obj) {
 }
 
 function drawObject(_obj) {
-	//console.log("Drawing:\nx " + _obj.pos[0] + "\ny " + _obj.pos[1] + "\nwidth " + _obj.size[0] + "\nheight " + _obj.size[1] + "\noffset " + _obj.bufferOffset);
+	console.log("Drawing:\nx " + _obj.pos[0] + "\ny " + _obj.pos[1] + "\nwidth " + _obj.size[0] + "\nheight " + _obj.size[1] + "\noffset " + _obj.bufferOffset);
 	gl.uniform2f(objectProgramLocs.worldPosition, _obj.pos[0], _obj.pos[1]);
 	gl.uniform2f(objectProgramLocs.worldSize, _obj.size[0], _obj.size[1]);
 	gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, _obj.bufferOffset);
@@ -658,7 +656,6 @@ function drawObjectArrays() {
 	gl.useProgram(objectProgram);
 	//Set texture sampler and screen size uniforms 
 	gl.uniform1i(objectProgramLocs.tex, curSampler);
-	gl.uniform2f(objectProgramLocs.screenSize, GameManager.getCanvasWidth(), GameManager.getCanvasHeight());
 	//Vertex attrib pointer for vertex position and texture coordnates
 	gl.vertexAttribPointer(
 		objectProgramLocs.vertexPos,
