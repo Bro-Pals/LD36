@@ -604,14 +604,6 @@ function initMainMenu() {
 	addObject(createDecor(0, 0, 800, 600, "title"));
 }
 
-function updateMainMenu(_diff) {
-	
-}
-
-function renderMainMenu(_diff) {
-	drawObjectArrays();
-}
-
 function mouseMainMenu(_pressed, _x, _y) {
 	if (_pressed) { //Get started!
 		advanceStory();
@@ -623,14 +615,6 @@ function mouseMainMenu(_pressed, _x, _y) {
 function initStoryBoard() {
 	clearObjectArrays();
 	curSampler = SAMPLER_SLIDES;
-}
-
-function updateStoryBoard(_diff) {
-	
-}
-
-function renderStoryBoard(_diff) {
-	
 }
 
 function mouseStoryBoard(_pressed, _x, _y) {
@@ -645,10 +629,6 @@ function initPlayGame() {
 }
 
 function updatePlayGame(_diff) {
-	
-}
-
-function renderPlayGame(_diff) {
 	
 }
 

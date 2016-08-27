@@ -55,8 +55,8 @@
 			GameManager.createState(
 				"mainMenu",
 				initMainMenu,
-				updateMainMenu,
-				renderMainMenu,
+				noFunc,
+				drawObjectArrays,
 					{
 					key : null,
 					mouse : mouseMainMenu,
@@ -66,8 +66,8 @@
 			GameManager.createState(
 				"storyBoard",
 				initStoryBoard,
-				updateStoryBoard,
-				renderStoryBoard,
+				noFunc,
+				drawObjectArrays,
 					{
 					key : null,
 					mouse : mouseStoryBoard,
@@ -78,7 +78,7 @@
 				"playGame",
 				initPlayGame,
 				updatePlayGame,
-				renderPlayGame,
+				drawObjectArrays,
 					{
 					key : null,
 					mouse : mousePlayGame,
